@@ -191,6 +191,25 @@ describe('panel administrativo', () => {
     expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument()
   })
 
+  it('ubica los datos de seguimiento debajo del historial al preparar el envío', async () => {
+    signIn('Admin'); window.history.replaceState(null, '', '/admin/pedidos')
+    const preparingOrder = { ...orderDetail, status: 'Preparing', deliveryMethod: 'HomeDelivery' }
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = String(input)
+      if (url.includes('/api/orders/10/history')) return response(orderHistory)
+      if (/\/api\/orders\/10$/.test(url)) return response(preparingOrder)
+      return apiMock(input, init)
+    })
+    render(<App />)
+    await userEvent.click(await screen.findByText('#10'))
+
+    const historyHeading = await screen.findByRole('heading', { name: 'Historial' })
+    const trackingHeading = screen.getByRole('heading', { name: 'Datos para marcar el pedido como enviado' })
+    expect(historyHeading.compareDocumentPosition(trackingHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByLabelText('Empresa transportista')).toBeInTheDocument()
+    expect(screen.getByLabelText('Número de seguimiento')).toBeInTheDocument()
+  })
+
   it('genera una sola constancia interna para un pedido cobrado', async () => {
     signIn('Admin'); window.history.replaceState(null, '', '/admin/pedidos')
     const paidOrder = { ...orderDetail, status: 'Paid', payments: [{ id: 50, provider: 'MercadoPago', amount: 15000, currency: 'ARS', status: 'Approved', createdAt: '2026-09-20T12:00:00Z', paidAt: '2026-09-20T12:05:00Z' }] }

@@ -4,7 +4,7 @@ export const storefront = {
   identity: { name: storeName, logoUrl: null as string | null, monogram: 'RV' },
   theme: {
     colors: { accent: '#c66a3d', background: '#f4efe5', panel: '#fffbf4', text: '#18372a', muted: '#6c796f' },
-    fonts: { body: "'Manrope', sans-serif", display: "'Cormorant Garamond', serif" },
+    fonts: { body: "'Manrope', sans-serif", display: "'Lora', serif" },
   },
   market: { locale: 'es-AR', currency: 'ARS', region: 'AR' },
   contact: { email: 'hola@raizviva.demo', phone: '+54 11 5555 0101', whatsapp: '+54 9 11 5555 0101' },

@@ -19,6 +19,10 @@ export function Catalog() {
   const load = () => { setLoading(true); setLoadError(''); Promise.all([api.products(false), api.categories()]).then(([result, categoryList]) => { setProducts(result.filter(product => product.isActive)); setCategories(categoryList) }).catch(() => setLoadError('Revisá tu conexión e intentá nuevamente.')).finally(() => setLoading(false)) }
   useEffect(load, [])
   useEffect(() => {
+    setQuery(searchParams.get('buscar') ?? '')
+    setCategory(searchParams.get('categoria') ?? '')
+  }, [searchParams])
+  useEffect(() => {
     if (!filtersOpen) return
     filterCloseRef.current?.focus()
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') { setFiltersOpen(false); window.setTimeout(() => filterTriggerRef.current?.focus(), 0) } }
