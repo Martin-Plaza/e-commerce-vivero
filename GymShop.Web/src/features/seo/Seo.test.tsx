@@ -17,7 +17,7 @@ describe('SEO', () => {
       jsonLd: { '@context': 'https://schema.org', '@type': 'Product', name: 'Mancuerna 10 kg' },
     })
 
-    expect(document.title).toBe('Mancuerna 10 kg | GymShop')
+    expect(document.title).toBe('Mancuerna 10 kg | Raíz Viva')
     expect(document.querySelector('meta[name="description"]')).toHaveAttribute('content', 'Mancuerna para entrenamiento de fuerza.')
     expect(document.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'index, follow, max-image-preview:large')
     expect(document.querySelector('meta[property="og:type"]')).toHaveAttribute('content', 'product')

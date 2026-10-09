@@ -48,7 +48,7 @@ export function CartPage() {
       <aside className="summary cart-summary">
         <h2>Resumen</h2><p>{session.user() ? storefront.copy.cartAuthenticatedExplanation : storefront.copy.cartGuestExplanation}</p>
         {session.user() && <form className="coupon-apply" onSubmit={apply}>
-          <label>Código de descuento<input placeholder="Ej.: FUERZA10" value={code} onChange={event => setCode(event.target.value)} disabled={couponBusy || Boolean(cart.couponCode)} /></label>
+          <label>Código de descuento<input placeholder="Ej.: VERDE10" value={code} onChange={event => setCode(event.target.value)} disabled={couponBusy || Boolean(cart.couponCode)} /></label>
           {cart.couponCode ? <button type="button" disabled={couponBusy} onClick={() => void cart.removeCoupon()}>{couponBusy ? 'Quitando…' : `Quitar ${cart.couponCode}`}</button> : <button type="submit" disabled={couponBusy || !code.trim()}>{couponBusy ? 'Aplicando…' : 'Aplicar'}</button>}
         </form>}
         <div><span>Subtotal</span><strong>{money(cart.subtotal)}</strong></div>

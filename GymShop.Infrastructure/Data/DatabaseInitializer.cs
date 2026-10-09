@@ -23,6 +23,7 @@ public static class DatabaseInitializer
         var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
         await db.Database.MigrateAsync(cancellationToken);
+        await NurseryCatalogSeeder.SeedAsync(db, configuration, cancellationToken);
         await SeedSuperAdminAsync(db, configuration, passwordHasher, cancellationToken);
     }
 

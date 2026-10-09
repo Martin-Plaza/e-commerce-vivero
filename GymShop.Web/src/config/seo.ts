@@ -7,7 +7,7 @@ export const seoConfig = {
   defaultTitle: storefront.identity.name,
   titleTemplate: `%s | ${storefront.identity.name}`,
   defaultDescription: import.meta.env.VITE_STORE_DESCRIPTION?.trim() || storefront.copy.heroDescription,
-  defaultImage: import.meta.env.VITE_SEO_IMAGE?.trim() || '/gymshop-linkedin-thumbnail.png',
+  defaultImage: import.meta.env.VITE_SEO_IMAGE?.trim() || '/images/nursery/hero-raiz-viva.png',
   twitterHandle: import.meta.env.VITE_TWITTER_HANDLE?.trim() || '',
   locale: storefront.market.locale.replace('-', '_'),
 } as const

@@ -1,6 +1,17 @@
-# GymShop
+# Raíz Viva
 
-E-commerce de equipamiento para gimnasio con catálogo, carrito, checkout invitado, gestión de stock, panel administrativo y pagos por transferencia bancaria o Mercado Pago.
+Demo de e-commerce para un vivero urbano con catálogo de plantas, macetas y productos de cuidado; incluye carrito, checkout invitado, gestión de stock, panel administrativo y pagos por transferencia bancaria o Mercado Pago. La solución conserva los nombres técnicos `GymShop.*` para evitar una migración disruptiva de namespaces, pero la experiencia pública está completamente orientada a Raíz Viva.
+
+## Catálogo de demostración
+
+El inicializador puede reemplazar el catálogo visible por seis categorías y ocho productos de vivero. Los productos anteriores se desactivan y quedan sin stock para preservar la integridad de pedidos históricos.
+
+```text
+DemoCatalog__Enabled=true
+DatabaseInitialization__Enabled=true
+```
+
+En desarrollo esta opción está habilitada en `appsettings.Development.json`; Docker Compose también la habilita en el servicio `initialize`.
 
 El repositorio contiene una API ASP.NET Core, una aplicación React y una base PostgreSQL administrada con Entity Framework Core.
 
@@ -161,7 +172,7 @@ El webhook debe ser HTTPS público y conservar la validación de firma. No habil
 Email__Provider=Resend
 Email__ApiKey=<API_KEY>
 Email__FromAddress=ventas@ejemplo.com
-Email__FromName=GymShop
+Email__FromName=Raíz Viva
 Email__PublicAppUrl=https://tienda.ejemplo.com
 Email__TransactionalNotificationsEnabled=true
 ```
@@ -174,7 +185,7 @@ Variables públicas del frontend:
 
 ```env
 VITE_SITE_URL=https://tienda.ejemplo.com
-VITE_SITE_NAME=GymShop
+VITE_SITE_NAME=Raíz Viva
 VITE_DEFAULT_SEO_DESCRIPTION=<DESCRIPCION>
 VITE_SEO_IMAGE=/imagen-social-1200x630.png
 VITE_INSTAGRAM_URL=

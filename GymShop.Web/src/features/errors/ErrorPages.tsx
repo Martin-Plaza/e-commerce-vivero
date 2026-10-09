@@ -2,7 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 export function NotFoundPage() {
-  return <section className="page-state" aria-labelledby="not-found-title"><span aria-hidden="true">404</span><p className="eyebrow">PÁGINA NO ENCONTRADA</p><h1 id="not-found-title">Acá no hay nada para entrenar</h1><p>La dirección puede estar incompleta o la página pudo haber cambiado.</p><div className="page-state-actions"><Link className="primary link-button" to="/">Volver al inicio</Link><Link className="link-button" to="/catalogo">Ver catálogo</Link></div></section>
+  return <section className="page-state" aria-labelledby="not-found-title"><span aria-hidden="true">404</span><p className="eyebrow">PÁGINA NO ENCONTRADA</p><h1 id="not-found-title">Esta hoja no estaba en el mapa</h1><p>La dirección puede estar incompleta o la página pudo haber cambiado.</p><div className="page-state-actions"><Link className="primary link-button" to="/">Volver al inicio</Link><Link className="link-button" to="/catalogo">Ver catálogo</Link></div></section>
 }
 
 export function UnexpectedErrorPage({ onRetry }: { onRetry(): void }) {

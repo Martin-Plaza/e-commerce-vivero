@@ -34,7 +34,7 @@ export function ProductDetailPage() {
   const colorAttribute = definitions.find(a => a.presentation === 'ColorSwatch'); const selectedColor = colorAttribute ? selected[colorAttribute.id] : undefined
   const colorImage = selectedColor ? product.colorImages?.[String(selectedColor)] ?? (selectedColor < 0 ? product.colorImages?.[optionById.get(selectedColor)?.value ?? ''] : undefined) : undefined
   const stock = selectedVariant?.stock ?? (variants.length ? 0 : product.stock); const price = selectedVariant?.price ?? product.price
-  const seoDescription = product.description?.trim() || `${product.name}, equipamiento disponible en ${storefront.identity.name}.`
+  const seoDescription = product.description?.trim() || `${product.name}, disponible en ${storefront.identity.name}.`
   return <><Seo metadata={{
     title: product.name,
     description: seoDescription,

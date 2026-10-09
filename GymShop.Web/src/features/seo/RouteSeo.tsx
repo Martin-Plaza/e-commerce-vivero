@@ -4,8 +4,8 @@ import type { SeoMetadata } from './Seo'
 import { Seo } from './Seo'
 
 const publicPages: Record<string, SeoMetadata> = {
-  '/': { description: 'Equipamiento para entrenar, ganar fuerza y alcanzar tus objetivos.', path: '/' },
-  '/catalogo': { title: 'Catálogo', description: 'Explorá equipamiento de entrenamiento, fuerza, movilidad y cardio.', path: '/catalogo' },
+  '/': { description: 'Plantas, macetas y cuidados elegidos para llenar de vida cada rincón.', path: '/' },
+  '/catalogo': { title: 'Tienda', description: 'Explorá plantas de interior y exterior, aromáticas, macetas, sustratos y accesorios.', path: '/catalogo' },
   '/terminos': { title: 'Términos y condiciones', description: 'Términos y condiciones de compra.', path: '/terminos' },
   '/privacidad': { title: 'Privacidad', description: 'Política de privacidad y tratamiento de datos personales.', path: '/privacidad' },
   '/envios-cambios-y-devoluciones': { title: 'Envíos, cambios y devoluciones', description: 'Información sobre entregas, cambios y devoluciones.', path: '/envios-cambios-y-devoluciones' },

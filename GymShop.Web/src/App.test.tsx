@@ -13,15 +13,15 @@ describe('flujos y permisos de la aplicación', () => {
   it('muestra seis destacados y navega a un catálogo separado', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/categories') ? json([]) : json(products))
     render(<App />)
-    expect(await screen.findByText('Productos destacados')).toBeInTheDocument()
+    expect(await screen.findByText('Verde para llevar')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Inicio' })).not.toBeInTheDocument()
     expect(await screen.findByText('Producto 6')).toBeInTheDocument()
     expect(screen.queryByText('Producto 7')).not.toBeInTheDocument()
-    expect(await screen.findByText(/Entrená fuerte/)).toBeInTheDocument()
-    expect(screen.getByText('Envíos a todo el país')).toBeInTheDocument()
-    expect(screen.getByText('Opciones de pago')).toBeInTheDocument()
+    expect(await screen.findByText(/Un ritual verde/)).toBeInTheDocument()
+    expect(screen.getByText('Envíos responsables')).toBeInTheDocument()
+    expect(screen.getByText('Te acompañamos')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Ver todos' }))
-    expect(screen.getByText('CATÁLOGO ACTIVO')).toBeInTheDocument()
+    expect(screen.getByText('NUESTRO VIVERO')).toBeInTheDocument()
     expect(await screen.findByText('Producto 7')).toBeInTheDocument()
   })
 
@@ -44,7 +44,7 @@ describe('flujos y permisos de la aplicación', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => json([]))
     window.history.replaceState(null, '', '/ruta-que-no-existe')
     render(<App />)
-    expect(screen.getByRole('heading', { name: 'Acá no hay nada para entrenar' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Esta hoja no estaba en el mapa' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Botón de arrepentimiento' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/ruta-que-no-existe')
   })
@@ -62,9 +62,9 @@ describe('flujos y permisos de la aplicación', () => {
     const invalid = { ...product, id: 99, name: 'Producto sin imagen', imageUrl: 'string' }
     vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/categories') ? json([]) : json([invalid, ...products]))
     render(<App />)
-    expect(await screen.findByText('Productos destacados')).toBeInTheDocument()
+    expect(await screen.findByText('Verde para llevar')).toBeInTheDocument()
     expect(screen.queryByText('Producto sin imagen')).not.toBeInTheDocument()
-    expect(screen.getByText(/Entrená fuerte/)).toBeInTheDocument()
+    expect(screen.getByText(/Un ritual verde/)).toBeInTheDocument()
   })
 
   it('completa un login exitoso', async () => {
@@ -77,7 +77,7 @@ describe('flujos y permisos de la aplicación', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Hola, Ana.')
     expect(localStorage.getItem('gymshop.token')).toBeNull()
     expect(sessionStorage.getItem('gymshop.access-token')).toBeNull()
-    await userEvent.click(screen.getByRole('link', { name: 'Catálogo' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Tienda' }))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 

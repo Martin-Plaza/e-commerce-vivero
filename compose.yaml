@@ -25,13 +25,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_MIGRATION_URL: Host=database;Port=5432;Database=GymShopDb;Username=gymshop_migrator;Password=${GYMSHOP_MIGRATION_DB_PASSWORD}
       DatabaseInitialization__Enabled: "true"
+      DemoCatalog__Enabled: "true"
       Jwt__Secret: ${GYMSHOP_JWT_SECRET}
       Mfa__EncryptionKey: ${GYMSHOP_MFA_ENCRYPTION_KEY}
       GoogleAuth__ClientId: ${GYMSHOP_GOOGLE_CLIENT_ID:-}
       Email__Provider: ${GYMSHOP_EMAIL_PROVIDER:-Mock}
       Email__ApiKey: ${GYMSHOP_EMAIL_API_KEY:-}
       Email__FromAddress: ${GYMSHOP_EMAIL_FROM_ADDRESS:-}
-      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-GymShop}
+      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-Raiz Viva}
       Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
       Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
       Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}
@@ -42,7 +43,7 @@ services:
       BankTransfer__Cuit: ${GYMSHOP_BANK_CUIT:-}
       BankTransfer__PendingOrderLifetimeHours: ${GYMSHOP_BANK_PENDING_ORDER_LIFETIME_HOURS:-24}
       RateLimiting__Enabled: "true"
-      SeedSuperAdmin__Email: ${GYMSHOP_SEED_ADMIN_EMAIL:-admin@gymshop.com}
+      SeedSuperAdmin__Email: ${GYMSHOP_SEED_ADMIN_EMAIL:-admin@raizviva.demo}
       SeedSuperAdmin__Name: ${GYMSHOP_SEED_ADMIN_NAME:-Super Admin}
       SeedSuperAdmin__Password: ${GYMSHOP_SEED_ADMIN_PASSWORD}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
@@ -69,7 +70,7 @@ services:
       Email__Provider: ${GYMSHOP_EMAIL_PROVIDER:-Mock}
       Email__ApiKey: ${GYMSHOP_EMAIL_API_KEY:-}
       Email__FromAddress: ${GYMSHOP_EMAIL_FROM_ADDRESS:-}
-      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-GymShop}
+      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-Raiz Viva}
       Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
       Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
       Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}

@@ -71,7 +71,7 @@ export function CouponsAdmin() {
     {result.totalPages > 1 && <div className="admin-pagination"><button disabled={loading || page === 1} onClick={() => setPage(value => value - 1)}>Anterior</button><span>Página {page} de {result.totalPages}</span><button disabled={loading || page === result.totalPages} onClick={() => setPage(value => value + 1)}>Siguiente</button></div>}
     {editing !== undefined && <form className="admin-form coupon-form" onSubmit={save}>
       <h2>{editing ? `Editar ${editing.code}` : 'Nuevo cupón'}</h2>
-      <label>Código<input required maxLength={50} placeholder="Ej.: FUERZA10" value={form.code} onChange={event => change('code', event.target.value.toUpperCase())} /></label>
+      <label>Código<input required maxLength={50} placeholder="Ej.: VERDE10" value={form.code} onChange={event => change('code', event.target.value.toUpperCase())} /></label>
       <label>Nombre<input required maxLength={200} placeholder="Nombre interno de la promoción" value={form.name} onChange={event => change('name', event.target.value)} /></label>
       <label>Tipo<select value={form.type} onChange={event => change('type', event.target.value as CouponType)}><option value="Percentage">Porcentaje</option><option value="FixedAmount">Monto fijo</option></select></label>
       <label>Valor<input required type="number" min="0.01" step="0.01" placeholder={form.type === 'Percentage' ? 'Porcentaje, ej.: 10' : 'Monto fijo, ej.: 5000'} value={form.value || ''} onChange={event => change('value', Number(event.target.value))} /></label>

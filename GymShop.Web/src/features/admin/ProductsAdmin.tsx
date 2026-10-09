@@ -67,7 +67,7 @@ export function ProductsAdmin() {
     <div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>Productos</h1><p>Consultá el catálogo completo y administrá disponibilidad y stock.</p></div><div className="admin-heading-actions"><span>{filtered.length} de {products.length}</span><Link className="primary link-button" to="/admin/productos/nuevo">Nuevo producto</Link></div></div>
     <AdminFeedback error={loadError || mutationError} success={success} />
     <div className="admin-filters" aria-label="Filtros de productos">
-      <label className="admin-search">Buscar por nombre<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Ej. mancuerna" /></label>
+      <label className="admin-search">Buscar por nombre<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Ej. monstera" /></label>
       <label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="all">Todas</option>{categories.map(value => <option key={value}>{value}</option>)}</select></label>
       <label>Estado<select value={status} onChange={event => setStatus(event.target.value as StatusFilter)}><option value="all">Todos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></label>
       <label>Stock<select value={stock} onChange={event => setStock(event.target.value as StockFilter)}><option value="all">Todos</option><option value="available">Con stock</option><option value="low">Stock bajo</option><option value="none">Sin stock</option></select></label>

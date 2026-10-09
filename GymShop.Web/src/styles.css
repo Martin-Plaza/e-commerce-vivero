@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 :root { font-family: var(--font-body, Inter, sans-serif); color: var(--text, #eef0ed); background: var(--background, #101210); font-synthesis: none; --lime: var(--accent, #d7ff45); --panel: #1a1d1a; --muted: #9da39b; --page-gutter: 24px; }
 * { box-sizing: border-box; } body { margin: 0; min-width: 0; } button, input, textarea, select { font: inherit; } button { cursor: pointer; } button:disabled { opacity: .45; cursor: not-allowed; }
 header { height: 76px; display: flex; align-items: center; gap: 28px; padding: 0 max(24px, calc((100vw - 1240px)/2)); border-bottom: 1px solid #30332f; position: sticky; top: 0; background: rgba(16,18,16,.96); z-index: 10; }
@@ -531,4 +531,90 @@ header nav a.active { color: var(--lime); background: #242822; }
   .name-fields { grid-template-columns:1fr; }
   .auth-card { padding:20px; }
   .closing-cta h2 { font-size:44px; }
+}
+
+/* Raíz Viva: identidad botánica, cálida y editorial. */
+body { background:var(--background); color:var(--text); }
+.storefront-header { border-color:#d9d0c2; background:rgba(244,239,229,.94); backdrop-filter:blur(16px); }
+.storefront-header .brand { color:#18372a; font-size:30px; font-weight:600; letter-spacing:-.02em; text-transform:none; }
+.storefront-header .brand span { min-width:42px; height:42px; display:grid; place-items:center; padding:0; border-radius:50% 50% 46% 54%; background:#315c45; color:#fffaf0; font:700 13px var(--font-body); letter-spacing:.02em; transform:rotate(-7deg); }
+.storefront-header > nav > a,.storefront-header .nav-menu > button { color:#53645a; border-radius:999px; }
+.storefront-header > nav > a:hover,.storefront-header > nav > a.active,.storefront-header .nav-menu > button:hover,.storefront-header .nav-menu > button[aria-expanded="true"] { color:#18372a; background:#e5ddcf; }
+.storefront-header button,.price-row button,.actions button,form button,.list-row button,.link-button { border-radius:999px; }
+.storefront-header .cart-button { color:#18372a; border-color:#b8aa98; background:#fffaf2; }
+.storefront-header .desktop-session-action { color:#18372a; }
+.nav-dropdown { border-color:#d4c7b6; border-radius:16px; background:#fffaf2; box-shadow:0 20px 50px #3d2d1b22; }
+.storefront-header .nav-dropdown a { color:#405248; border-radius:10px; }
+.storefront-header .nav-dropdown a:hover { color:#fff; background:#315c45; }
+main { max-width:1320px; padding-top:28px; }
+.eyebrow { color:#a95331; letter-spacing:.19em; }
+.primary,.cta { border-radius:999px !important; background:#315c45 !important; border-color:#315c45 !important; color:#fffaf0 !important; box-shadow:0 8px 22px #315c4525; }
+.primary:hover,.cta:hover { background:#244b37 !important; border-color:#244b37 !important; transform:translateY(-1px); }
+.home-hero { min-height:620px; border:0; border-radius:32px; background:#e9e0d2; box-shadow:0 24px 70px #54351d18; }
+.home-hero::after { background:linear-gradient(90deg,rgba(247,242,232,.98) 0%,rgba(247,242,232,.91) 31%,rgba(247,242,232,.2) 58%,transparent 74%); }
+.home-hero-overlay { width:min(640px,55%); padding:82px 68px; }
+.home-hero-overlay h1 { max-width:610px; margin:12px 0 18px; color:#18372a; font-size:clamp(68px,8vw,112px); font-weight:600; line-height:.79; letter-spacing:-.055em; text-transform:none; }
+.home-hero-overlay > p:not(.eyebrow) { color:#52645a; font-size:17px; }
+.hero-product-link { right:30px; bottom:28px; border-color:#ffffffa8; border-radius:999px; background:#17372ade; color:white; backdrop-filter:blur(12px); }
+.hero-product-link span { color:#efb38f; }
+.section-title h1,.section-title h2,.catalog-intro h1 { color:#18372a; font-weight:600; letter-spacing:-.035em; text-transform:none; }
+.section-title h1,.section-title h2 { font-size:clamp(46px,5.5vw,70px); line-height:.9; }
+.section-title > button,.featured-products .section-title > button { border-color:#9b8e7c; border-radius:999px; color:#315c45; }
+.category-grid { grid-template-columns:repeat(3,1fr); gap:16px; }
+.category-tile { min-height:245px; padding:28px; border:0; border-radius:22px; background:linear-gradient(145deg,color-mix(in srgb,var(--category-color) 84%,#17372a),#17372a); box-shadow:0 14px 34px #263b2c18; }
+.category-tile::after { width:170px; height:170px; right:-55px; top:-55px; border-color:#fff; opacity:.2; }
+.category-number { color:#f7efe2; }
+.product-card { overflow:hidden; border:1px solid #ded4c5; border-radius:22px; background:#fffaf2; box-shadow:0 14px 38px #4c351618; }
+.commercial-card:hover { border-color:#bca98e; box-shadow:0 18px 46px #4c351625; }
+.commercial-card .product-image { height:300px; background:#f0e7d9; }
+.product-image img { object-fit:cover; }
+.product-card small,.product-card p { color:#6c796f; }
+.commercial-card h3 { font-size:30px; font-weight:600; line-height:1; text-transform:none; }
+.commercial-card h3 a { color:#18372a; }
+.price-row strong,.card-link { color:#a95331; }
+.category-badge { border:0; border-radius:999px; background:#fffaf2e8; color:#315c45 !important; backdrop-filter:blur(8px); }
+.editorial-banner,.closing-cta { overflow:hidden; border:0; border-radius:28px; box-shadow:0 20px 55px #3d2e1a1b; }
+.editorial-banner::after { background:linear-gradient(90deg,transparent 28%,rgba(14,38,25,.08) 48%,rgba(14,38,25,.94) 88%); }
+.editorial-copy > strong { font-weight:600; letter-spacing:-.035em; text-transform:none; }
+.editorial-copy > span:last-child { border-color:#ffffff55; border-radius:999px; background:#f8f0e615; }
+.editorial-copy b { color:#efb38f; }
+.trust-section { overflow:hidden; border:1px solid #ded4c5; border-radius:22px; background:#fffaf2; }
+.trust-section article { border-color:#e4dbcf; }
+.trust-section article > span { background:#e6d9c6; color:#315c45; }
+.trust-section h3 { color:#18372a; font:600 24px var(--font-display); text-transform:none; }
+.closing-cta::after { background:linear-gradient(90deg,#153527ef 0%,#153527cf 42%,transparent 75%); }
+.closing-cta h2 { font-weight:600; letter-spacing:-.04em; text-transform:none; }
+.closing-cta p:not(.eyebrow) { color:#e3e8e2; }
+.catalog-search input,input,textarea,select { border-color:#cfc3b3; background:#fffaf2; color:#18372a; }
+.catalog-search input:focus,input:focus,textarea:focus,select:focus { border-color:#a95331; outline-color:#a95331; }
+.search-icon { color:#a95331; }
+.catalog-search button { color:#315c45; }
+.filter-heading,.filter-fields fieldset { border-color:#d8cdbf; }
+.filter-fields legend,.results-bar strong { color:#18372a; }
+.storefront-footer { border-color:#294c3a; background:#17372a; }
+.storefront-footer strong { color:#fffaf0; font:600 22px var(--font-display); }
+.storefront-footer a { color:#cbd6ce; }
+.storefront-footer a:hover { color:#fff; }
+.footer-social-icons a,.footer-social-icons .social-link-disabled { border-color:#ffffff33; background:#ffffff0b; }
+
+@media (max-width:850px) {
+  .home-hero { min-height:680px; padding-top:330px; background:#f4efe5; }
+  .home-hero > img,.home-hero::after { height:330px; }
+  .home-hero::after { background:linear-gradient(180deg,transparent 52%,#f4efe5 100%); }
+  .home-hero-overlay { width:100%; padding:34px 30px 40px; background:#f4efe5; }
+  .home-hero-overlay h1 { font-size:clamp(58px,12vw,78px); }
+  .category-grid { grid-template-columns:repeat(2,1fr); }
+  .storefront-header > nav { background:#f4efe5f8; border-color:#d8cdbf; box-shadow:0 18px 45px #3d2e1a22; }
+  .mobile-menu-button { border-color:#a99d8e; color:#18372a; }
+  .closing-cta::after { background:linear-gradient(180deg,transparent 18%,#153527 57%); }
+}
+
+@media (max-width:700px) {
+  .home-hero { min-height:650px; border-radius:22px; padding-top:260px; }
+  .home-hero > img,.home-hero::after { height:260px; }
+  .home-hero-overlay { padding:28px 22px 34px; }
+  .home-hero-overlay h1 { font-size:clamp(52px,15vw,68px); }
+  .category-grid { display:flex; }
+  .category-tile { min-height:220px; }
+  .commercial-card .product-image,.catalog-results .commercial-card .product-image { height:230px; }
 }
