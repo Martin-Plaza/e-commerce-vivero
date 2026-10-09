@@ -40,6 +40,17 @@ describe('experiencia pública del catálogo', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3)
   })
 
+  it('cambia de categoría desde el header aunque el catálogo ya esté abierto', async () => {
+    window.history.replaceState(null, '', '/catalogo?categoria=fuerza'); mockCatalog(); render(<App />)
+    expect(await screen.findByRole('radio', { name: 'Fuerza' })).toBeChecked()
+    await userEvent.click(screen.getByRole('button', { name: /Categorías/ }))
+    await userEvent.click(screen.getByRole('link', { name: 'Cardio' }))
+    await waitFor(() => expect(window.location.search).toBe('?categoria=cardio'))
+    expect(screen.getByRole('radio', { name: 'Cardio' })).toBeChecked()
+    expect(screen.getByRole('heading', { name: 'Soga rápida' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Mancuerna Pro' })).not.toBeInTheDocument()
+  })
+
   it('vuelve arriba al abrir el detalle de un producto desde el catálogo', async () => {
     window.history.replaceState(null, '', '/catalogo')
     mockCatalog()
