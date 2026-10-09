@@ -1,0 +1,67 @@
+﻿# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# .NET
+*.rsuser
+*.nupkg
+*.snupkg
+project.lock.json
+artifacts/
+.artifacts/
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.trx
+*.sourcelink.json
+.msCoverageSourceRootsMapping_*
+CoverletSourceRootsMapping_*
+
+# Logs
+*.log
+
+# Environment / local config
+.env
+.env.*
+!*.example
+appsettings.Local.json
+
+# Private keys and certificate requests
+*.key
+*.pem
+*.csr
+*.pfx
+*.p12
+
+# Frontend
+node_modules/
+dist/
+.vite/
+.pnpm-store/
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+.neon
+.tools/
+.railway/
+
+# Local artifact previews
+tmp/
+output/

@@ -1,0 +1,34 @@
+@GymShop.Api_HostAddress = http://localhost:5093
+@Token = reemplazar_por_token
+
+GET {{GymShop.Api_HostAddress}}/api/products
+Accept: application/json
+
+###
+
+POST {{GymShop.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Usuario Demo",
+  "email": "demo@gymshop.com",
+  "password": "clave123"
+}
+
+###
+
+POST {{GymShop.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@gymshop.com",
+  "password": "clave123"
+}
+
+###
+
+GET {{GymShop.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{Token}}
+Accept: application/json
+
+

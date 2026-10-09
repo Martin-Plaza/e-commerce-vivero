@@ -1,0 +1,16 @@
+.git
+.github
+.vs
+.vscode
+.idea
+**/bin
+**/obj
+**/node_modules
+**/dist
+.pnpm-store
+TestResults
+coverage
+*.log
+.env
+.env.*
+!.env.example

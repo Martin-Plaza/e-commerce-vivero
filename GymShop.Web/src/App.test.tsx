@@ -1,0 +1,252 @@
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import App from './App'
+
+const json = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
+const product = { id: 1, name: 'Mancuerna', description: 'Fuerza', price: 1000, stock: 4, imageUrl: '/images/mancuerna.jpg', isActive: true, category: null }
+const products = Array.from({ length: 7 }, (_, index) => ({ ...product, id: index + 1, name: index === 0 ? 'Kettlebell 16kg' : `Producto ${index + 1}` }))
+
+describe('flujos y permisos de la aplicación', () => {
+  beforeEach(() => { localStorage.clear(); window.history.replaceState(null, '', '/'); vi.restoreAllMocks() })
+
+  it('muestra seis destacados y navega a un catálogo separado', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/categories') ? json([]) : json(products))
+    render(<App />)
+    expect(await screen.findByText('Productos destacados')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Inicio' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Producto 6')).toBeInTheDocument()
+    expect(screen.queryByText('Producto 7')).not.toBeInTheDocument()
+    expect(await screen.findByText(/Entrená fuerte/)).toBeInTheDocument()
+    expect(screen.getByText('Envíos a todo el país')).toBeInTheDocument()
+    expect(screen.getByText('Opciones de pago')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Ver todos' }))
+    expect(screen.getByText('CATÁLOGO ACTIVO')).toBeInTheDocument()
+    expect(await screen.findByText('Producto 7')).toBeInTheDocument()
+  })
+
+  it('abre y cierra la navegación móvil de forma accesible', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => json([]))
+    render(<App />)
+    const menuButton = screen.getByRole('button', { name: 'Abrir menú' })
+    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' })
+
+    await userEvent.click(menuButton)
+    expect(screen.getByRole('button', { name: 'Cerrar menú', expanded: true })).toBeInTheDocument()
+    expect(navigation).toHaveClass('is-open')
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'Abrir menú', expanded: false })).toBeInTheDocument()
+    expect(navigation).not.toHaveClass('is-open')
+  })
+
+  it('muestra navegación legal y una página 404 real sin redirigir al inicio', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => json([]))
+    window.history.replaceState(null, '', '/ruta-que-no-existe')
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'Acá no hay nada para entrenar' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Botón de arrepentimiento' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/ruta-que-no-existe')
+  })
+
+  it('expone el arrepentimiento sin requerir una sesión', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => json([]))
+    window.history.replaceState(null, '', '/arrepentimiento')
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'Arrepentimiento de compra' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Iniciar solicitud por email' })).toHaveAttribute('href', expect.stringContaining('mailto:'))
+    expect(screen.queryByText('Iniciá sesión para continuar.')).not.toBeInTheDocument()
+  })
+
+  it('prioriza productos con imágenes válidas en los destacados', async () => {
+    const invalid = { ...product, id: 99, name: 'Producto sin imagen', imageUrl: 'string' }
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/categories') ? json([]) : json([invalid, ...products]))
+    render(<App />)
+    expect(await screen.findByText('Productos destacados')).toBeInTheDocument()
+    expect(screen.queryByText('Producto sin imagen')).not.toBeInTheDocument()
+    expect(screen.getByText(/Entrená fuerte/)).toBeInTheDocument()
+  })
+
+  it('completa un login exitoso', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/products') ? json([]) : String(input).includes('/login') ? json({ user: { id: 1, email: 'user@gym.com', name: 'Ana', role: 'User' } }) : json({ items: [] }))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'user@gym.com')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'clave123')
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ingresar' }).at(-1)!)
+    expect(await screen.findByRole('status')).toHaveTextContent('Hola, Ana.')
+    expect(localStorage.getItem('gymshop.token')).toBeNull()
+    expect(sessionStorage.getItem('gymshop.access-token')).toBeNull()
+    await userEvent.click(screen.getByRole('link', { name: 'Catálogo' }))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('muestra credenciales inválidas y no crea sesión', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/login') ? json({ message: 'Credenciales invalidas.' }, 401) : json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'bad@gym.com')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'incorrecta')
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ingresar' }).at(-1)!)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales invalidas.')
+    expect(localStorage.getItem('gymshop.token')).toBeNull()
+  })
+
+  it('registra, permite ver la contraseña y verifica el código Mock antes de iniciar sesión', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = String(input)
+      if (url.includes('/auth/register')) return json({ email: 'new@gym.com', expiresInSeconds: 60, developmentCode: '123456' })
+      if (url.includes('/auth/verify-email')) return json({ user: { id: 8, email: 'new@gym.com', name: 'Nueva', lastName: 'Persona', role: 'User' } })
+      if (url.includes('/cart')) return json({ items: [] })
+      return json([])
+    })
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Quiero registrarme' }))
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Nueva')
+    await userEvent.type(screen.getByLabelText('Apellido'), 'Persona')
+    await userEvent.type(screen.getByLabelText('Email'), 'new@gym.com')
+    const password = screen.getByLabelText('Contraseña')
+    await userEvent.type(password, 'Clave1234')
+    expect(password).toHaveAttribute('type', 'password')
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
+    expect(password).toHaveAttribute('type', 'text')
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+    expect(await screen.findByText(/Código Mock local/)).toHaveTextContent('123456')
+    const verificationCode = screen.getByLabelText('Código de verificación')
+    await waitFor(() => expect(verificationCode).toBeEnabled())
+    await userEvent.type(verificationCode, '123456')
+    await userEvent.click(screen.getByRole('button', { name: 'Verificar e ingresar' }))
+    await waitFor(() => expect(localStorage.getItem('gymshop.token')).toBeNull())
+    expect(screen.getByRole('status')).toHaveTextContent('Nueva')
+  })
+
+  it('mantiene el formulario de registro disponible si falla la solicitud de email', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/auth/register')
+      ? json({ message: 'No pudimos solicitar el envío del código. Intentá nuevamente.', code: 'email_send_failed' }, 503)
+      : json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Quiero registrarme' }))
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Nueva')
+    await userEvent.type(screen.getByLabelText('Apellido'), 'Persona')
+    await userEvent.type(screen.getByLabelText('Email'), 'retry@gym.com')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'Clave1234')
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos solicitar el envío del código')
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeEnabled()
+    expect(screen.getByLabelText('Email')).toHaveValue('retry@gym.com')
+    expect(localStorage.getItem('gymshop.pending-registration')).toBeNull()
+  })
+
+  it('retoma una verificación pendiente después de volver a abrir el frontend', async () => {
+    localStorage.setItem('gymshop.pending-registration', JSON.stringify({ email: 'pendiente@gym.com', expiresAt: Date.now() + 60_000 }))
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    expect(screen.getByText('pendiente@gym.com')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Retomamos tu verificación pendiente.')
+    expect(screen.queryByText(/Código Mock local/)).not.toBeInTheDocument()
+  })
+
+  it('muestra de forma útil un código incorrecto', async () => {
+    localStorage.setItem('gymshop.pending-registration', JSON.stringify({ email: 'pendiente@gym.com', expiresAt: Date.now() + 60_000 }))
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/verify-email') ? json({ message: 'El codigo es incorrecto.' }, 400) : json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.type(screen.getByLabelText('Código de verificación'), '000000')
+    await userEvent.click(screen.getByRole('button', { name: 'Verificar e ingresar' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('El codigo es incorrecto.')
+    expect(localStorage.getItem('gymshop.pending-registration')).not.toBeNull()
+  })
+
+  it('recupera la contraseña con código Mock y vuelve al login sin crear sesión', async () => {
+    const requests: Array<{ url: string; body: Record<string, string> }> = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = String(input); const body = init?.body ? JSON.parse(String(init.body)) as Record<string, string> : {}
+      requests.push({ url, body })
+      if (url.includes('/forgot-password')) return json({ message: 'Si el email corresponde a una cuenta, enviamos un codigo para restablecer la password.', expiresInSeconds: 600, developmentCode: '654321' })
+      if (url.includes('/reset-password')) return json({ message: 'La password fue actualizada. Ya podes iniciar sesion.' })
+      return json([])
+    })
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Olvidé mi contraseña' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'USER@GYM.COM')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar código' }))
+    expect(await screen.findByText(/Código Mock local/)).toHaveTextContent('654321')
+    expect(screen.getByText(/vence en 10 minutos/)).toBeInTheDocument()
+    const resetCode = screen.getByLabelText('Código de recuperación')
+    await userEvent.type(resetCode, '654321')
+    const password = screen.getByLabelText('Nueva contraseña')
+    await userEvent.type(password, 'NuevaClave456')
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
+    expect(password).toHaveAttribute('type', 'text')
+    expect(resetCode).toHaveValue('654321')
+    expect(resetCode).toBeValid()
+    expect(password).toBeValid()
+    expect(password).toHaveValue('NuevaClave456')
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
+    expect(await screen.findByText(/La password fue actualizada/)).toHaveAttribute('role', 'status')
+    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument()
+    expect(localStorage.getItem('gymshop.token')).toBeNull()
+    expect(requests.find(request => request.url.includes('/forgot-password'))?.body.email).toBe('user@gym.com')
+    expect(requests.find(request => request.url.includes('/reset-password'))?.body).toEqual({ email: 'user@gym.com', code: '654321', newPassword: 'NuevaClave456' })
+  })
+
+  it('completa la solicitud desplegada sin mostrar un código', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/forgot-password')
+      ? json({ message: 'Si el email corresponde a una cuenta, enviamos un codigo para restablecer la password.', expiresInSeconds: 600 })
+      : json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Olvidé mi contraseña' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'user@gym.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar código' }))
+    expect(await screen.findByText(/Ingresá el código de 6 dígitos/)).toBeInTheDocument()
+    expect(screen.queryByText(/Código Mock local/)).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Si el email corresponde a una cuenta')
+  })
+
+  it('muestra carga y recupera el formulario ante un error al solicitar el código', async () => {
+    let resolveRequest!: (response: Response) => void
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/forgot-password')
+      ? new Promise<Response>(resolve => { resolveRequest = resolve })
+      : json([]))
+    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: 'Ingresar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Olvidé mi contraseña' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'user@gym.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar código' }))
+    expect(screen.getByRole('button', { name: 'Enviando…' })).toBeDisabled()
+    resolveRequest(await json({ message: 'Servicio temporalmente no disponible.' }, 503))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Servicio temporalmente no disponible.')
+    expect(screen.getByRole('button', { name: 'Enviar código' })).toBeEnabled()
+    expect(screen.getByLabelText('Email')).toHaveValue('user@gym.com')
+  })
+
+  it('oculta controles Admin y SuperAdmin a User', async () => {
+    localStorage.setItem('gymshop.token', 'jwt'); localStorage.setItem('gymshop.user', JSON.stringify({ id: 1, email: 'u@gym.com', name: 'U', role: 'User' }))
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/cart') ? json({ items: [] }) : json([]))
+    render(<App />)
+    await waitFor(() => expect(screen.queryByText('Administración')).not.toBeInTheDocument())
+    expect(screen.queryByText('Usuarios')).not.toBeInTheDocument()
+    expect(screen.queryByText('Auditoría')).not.toBeInTheDocument()
+  })
+
+  it('expone productos a Admin pero reserva usuarios y auditoría a SuperAdmin', async () => {
+    localStorage.setItem('gymshop.token', 'jwt'); localStorage.setItem('gymshop.user', JSON.stringify({ id: 2, email: 'a@gym.com', name: 'A', role: 'Admin' }))
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => String(input).includes('/cart') ? json({ items: [] }) : json([]))
+    const rendered = render(<App />)
+    expect(screen.getByText('Administración')).toBeInTheDocument()
+    expect(screen.queryByText('Usuarios')).not.toBeInTheDocument()
+    rendered.unmount()
+    localStorage.setItem('gymshop.user', JSON.stringify({ id: 3, email: 's@gym.com', name: 'S', role: 'SuperAdmin' }))
+    window.history.replaceState(null, '', '/admin')
+    render(<App />)
+    const navigation = screen.getByRole('navigation', { name: 'Navegación administrativa' })
+    expect(within(navigation).getByText('Usuarios')).toBeInTheDocument()
+    expect(within(navigation).getByText('Auditoría')).toBeInTheDocument()
+  })
+})

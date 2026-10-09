@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  build-and-test:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+    env:
+      GYMSHOP_TEST_POSTGRES: "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres"
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore GymShop.slnx
+
+      - name: Build
+        run: dotnet build GymShop.slnx --configuration Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test GymShop.slnx --configuration Release --no-build --filter "Category!=Integration" --verbosity normal
+
+      - name: Full suite with PostgreSQL and coverage
+        shell: pwsh
+        run: |
+          dotnet test GymShop.slnx --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults --verbosity normal
+          ./scripts/Summarize-Coverage.ps1 -ResultsDirectory TestResults
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gymshop-coverage
+          path: TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: GymShop.Web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: GymShop.Web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

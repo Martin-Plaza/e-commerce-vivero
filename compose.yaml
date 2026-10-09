@@ -1,0 +1,95 @@
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: GymShopDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${GYMSHOP_DB_PASSWORD}
+      GYMSHOP_APP_DB_PASSWORD: ${GYMSHOP_APP_DB_PASSWORD}
+      GYMSHOP_MIGRATION_DB_PASSWORD: ${GYMSHOP_MIGRATION_DB_PASSWORD}
+    volumes:
+      - gymshop-postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-gymshop-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d GymShopDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  initialize:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_MIGRATION_URL: Host=database;Port=5432;Database=GymShopDb;Username=gymshop_migrator;Password=${GYMSHOP_MIGRATION_DB_PASSWORD}
+      DatabaseInitialization__Enabled: "true"
+      Jwt__Secret: ${GYMSHOP_JWT_SECRET}
+      Mfa__EncryptionKey: ${GYMSHOP_MFA_ENCRYPTION_KEY}
+      GoogleAuth__ClientId: ${GYMSHOP_GOOGLE_CLIENT_ID:-}
+      Email__Provider: ${GYMSHOP_EMAIL_PROVIDER:-Mock}
+      Email__ApiKey: ${GYMSHOP_EMAIL_API_KEY:-}
+      Email__FromAddress: ${GYMSHOP_EMAIL_FROM_ADDRESS:-}
+      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-GymShop}
+      Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
+      Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
+      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}
+      BankTransfer__BankName: ${GYMSHOP_BANK_NAME:-}
+      BankTransfer__AccountHolder: ${GYMSHOP_BANK_ACCOUNT_HOLDER:-}
+      BankTransfer__Cbu: ${GYMSHOP_BANK_CBU:-}
+      BankTransfer__Alias: ${GYMSHOP_BANK_ALIAS:-}
+      BankTransfer__Cuit: ${GYMSHOP_BANK_CUIT:-}
+      BankTransfer__PendingOrderLifetimeHours: ${GYMSHOP_BANK_PENDING_ORDER_LIFETIME_HOURS:-24}
+      RateLimiting__Enabled: "true"
+      SeedSuperAdmin__Email: ${GYMSHOP_SEED_ADMIN_EMAIL:-admin@gymshop.com}
+      SeedSuperAdmin__Name: ${GYMSHOP_SEED_ADMIN_NAME:-Super Admin}
+      SeedSuperAdmin__Password: ${GYMSHOP_SEED_ADMIN_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3:-}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      PRODUCT_IMAGE_BUCKET: ${PRODUCT_IMAGE_BUCKET:-gymshop-product-images}
+    command: ["dotnet", "GymShop.Api.dll", "--initialize-only"]
+    depends_on:
+      database:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=database;Port=5432;Database=GymShopDb;Username=gymshop_app;Password=${GYMSHOP_APP_DB_PASSWORD}
+      DatabaseInitialization__Enabled: "false"
+      Jwt__Secret: ${GYMSHOP_JWT_SECRET}
+      Mfa__EncryptionKey: ${GYMSHOP_MFA_ENCRYPTION_KEY}
+      GoogleAuth__ClientId: ${GYMSHOP_GOOGLE_CLIENT_ID:-}
+      Email__Provider: ${GYMSHOP_EMAIL_PROVIDER:-Mock}
+      Email__ApiKey: ${GYMSHOP_EMAIL_API_KEY:-}
+      Email__FromAddress: ${GYMSHOP_EMAIL_FROM_ADDRESS:-}
+      Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-GymShop}
+      Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
+      Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
+      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}
+      BankTransfer__BankName: ${GYMSHOP_BANK_NAME:-}
+      BankTransfer__AccountHolder: ${GYMSHOP_BANK_ACCOUNT_HOLDER:-}
+      BankTransfer__Cbu: ${GYMSHOP_BANK_CBU:-}
+      BankTransfer__Alias: ${GYMSHOP_BANK_ALIAS:-}
+      BankTransfer__Cuit: ${GYMSHOP_BANK_CUIT:-}
+      BankTransfer__PendingOrderLifetimeHours: ${GYMSHOP_BANK_PENDING_ORDER_LIFETIME_HOURS:-24}
+      RateLimiting__Enabled: "true"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3:-}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      PRODUCT_IMAGE_BUCKET: ${PRODUCT_IMAGE_BUCKET:-gymshop-product-images}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      initialize:
+        condition: service_completed_successfully
+
+volumes:
+  gymshop-postgres-data:
