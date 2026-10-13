@@ -10,7 +10,7 @@ const env = loadEnv(mode, root, '')
 const siteUrl = (env.VITE_SITE_URL || '').trim().replace(/\/$/, '')
 const storeName = (env.VITE_STORE_NAME || 'Raíz Viva').trim()
 const description = (env.VITE_STORE_DESCRIPTION || 'Plantas, macetas y cuidados para llenar de vida cada rincón.').trim()
-const socialImage = (env.VITE_SEO_IMAGE || '/images/nursery/hero-raiz-viva.png').trim()
+const socialImage = (env.VITE_SEO_IMAGE || '/images/nursery/hero-raiz-viva.webp').trim()
 const publicPaths = ['/', '/catalogo', '/terminos', '/privacidad', '/envios-cambios-y-devoluciones', '/contacto']
 const extraPaths = (env.VITE_SEO_EXTRA_PATHS || '').split(',').map(value => value.trim()).filter(Boolean)
 const indexable = /^https:\/\//i.test(siteUrl) && !siteUrl.includes('<')

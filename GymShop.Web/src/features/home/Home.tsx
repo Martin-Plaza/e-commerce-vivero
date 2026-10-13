@@ -24,7 +24,7 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
   const campaignProduct = products.find(product => product.name.toLocaleLowerCase('es').includes('monstera')) ?? products[0]
   return <>
     <section className="home-hero">
-      <img src={storefront.assets.hero} alt={storefront.copy.heroImageAlt} />
+      <img src={storefront.assets.hero} alt={storefront.copy.heroImageAlt} width="1600" height="640" />
       <div className="home-hero-overlay">
         <p className="eyebrow">{storefront.copy.heroEyebrow}</p>
         <h1>{storefront.copy.heroTitle}</h1>
@@ -52,7 +52,7 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
 
     {campaignProduct && <section className="editorial-section" aria-label={storefront.copy.campaignAriaLabel}>
       <button className="editorial-banner" onClick={() => onProduct(campaignProduct.id)}>
-        <img src={storefront.assets.campaign} alt={storefront.copy.campaignImageAlt} loading="lazy" />
+        <img src={storefront.assets.campaign} alt={storefront.copy.campaignImageAlt} width="1600" height="759" loading="lazy" />
         <span className="editorial-copy">
           <span className="eyebrow">{storefront.copy.campaignEyebrow}</span>
           <strong>{storefront.copy.campaignTitleLine1}<br />{storefront.copy.campaignTitleLine2}</strong>
@@ -66,7 +66,7 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
     </section>
 
     <section className="closing-cta" aria-label="Inspiración para crear un rincón verde">
-      <img src="/images/nursery/potting-editorial.png" alt="Manos trasplantando una planta con cuidado" loading="lazy" />
+      <img src="/images/nursery/potting-editorial.webp" alt="Manos trasplantando una planta con cuidado" width="1600" height="759" loading="lazy" />
       <div><p className="eyebrow">TU RINCÓN, MÁS VIVO</p><h2>Empezá con una planta</h2><p>No hace falta saberlo todo. Elegí una especie para tu espacio y acompañala a crecer.</p><button className="primary" onClick={() => onCatalog()}>Encontrá la indicada</button></div>
     </section>
 
