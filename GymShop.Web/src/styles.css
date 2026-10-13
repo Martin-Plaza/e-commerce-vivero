@@ -666,7 +666,7 @@ main { max-width:1320px; padding-top:28px; }
   .category-tile { min-height:220px; }
   .commercial-card .product-image,.catalog-results .commercial-card .product-image { height:230px; }
   .result-hero { min-width:0; overflow:hidden; }
-  .result-hero h1 { max-width:100%; font-size:clamp(38px,12vw,48px); line-height:.94; letter-spacing:-.035em; overflow-wrap:break-word; }
+  .result-hero h1 { max-width:100%; font-size:clamp(32px,10vw,46px); line-height:.94; letter-spacing:-.035em; overflow-wrap:normal; word-break:normal; hyphens:none; }
   .legal-heading h1 { font-size:clamp(40px,13vw,58px); overflow-wrap:break-word; }
 }
 
