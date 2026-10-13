@@ -60,7 +60,8 @@ Thumbs.db
 desktop.ini
 .neon
 .tools/
-.railway/
+.railway/*
+!.railway/railway.ts
 
 # Local artifact previews
 tmp/
