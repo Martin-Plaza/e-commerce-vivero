@@ -83,6 +83,98 @@ internal static class CheckoutSessionMapper
 
 internal static class CheckoutCompletion
 {
+    public static async Task<AppResult<Order>> CreatePendingBankTransferOrderAsync(
+        IApplicationDbContext db,
+        CheckoutSession checkout,
+        Payment payment,
+        IAuditContext? auditContext,
+        CancellationToken cancellationToken)
+    {
+        if (checkout.OrderId.HasValue)
+        {
+            var existing = await db.Orders.Include(x => x.Items)
+                .SingleAsync(x => x.Id == checkout.OrderId.Value, cancellationToken);
+            return AppResult<Order>.Success(existing);
+        }
+
+        var now = DateTime.UtcNow;
+        var order = new Order
+        {
+            UserId = checkout.UserId,
+            ExpiresAtUtc = checkout.ExpiresAtUtc,
+            StockReserved = false,
+            CheckoutIdempotencyKey = checkout.IdempotencyKey,
+            CheckoutRequestFingerprint = checkout.RequestFingerprint,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Status = OrderStatus.Pending,
+            Subtotal = checkout.Subtotal,
+            CouponCode = checkout.CouponCode,
+            DiscountAmount = checkout.DiscountAmount,
+            DeliveryMethod = checkout.DeliveryMethod,
+            ShippingCost = checkout.ShippingCost,
+            Total = checkout.Total,
+            ShippingAddress = checkout.ShippingAddress,
+            ShippingPostalCode = checkout.ShippingPostalCode,
+            ShippingProvince = checkout.ShippingProvince,
+            ShippingCity = checkout.ShippingCity,
+            ShippingStreet = checkout.ShippingStreet,
+            ShippingStreetNumber = checkout.ShippingStreetNumber,
+            ShippingFloor = checkout.ShippingFloor,
+            ShippingApartment = checkout.ShippingApartment,
+            ShippingNotes = checkout.ShippingNotes,
+            ShippingQuoteId = checkout.ShippingQuoteId,
+            ShippingProviderCode = checkout.ShippingProviderCode,
+            ShippingServiceCode = checkout.ShippingServiceCode,
+            ShippingServiceName = checkout.ShippingServiceName,
+            PickupAddress = checkout.PickupAddress,
+            PickupHours = checkout.PickupHours,
+            PickupInstructions = checkout.PickupInstructions
+        };
+
+        foreach (var line in checkout.Items)
+        {
+            order.Items.Add(new OrderItem
+            {
+                ProductId = line.ProductId,
+                ProductName = line.ProductName,
+                ProductVariantId = line.ProductVariantId,
+                VariantSku = line.VariantSku,
+                VariantAttributesJson = line.VariantAttributesJson,
+                UnitPrice = line.UnitPrice,
+                Quantity = line.Quantity,
+                Subtotal = line.Subtotal
+            });
+        }
+
+        if (checkout.CouponId.HasValue && checkout.UserId.HasValue)
+        {
+            order.CouponRedemption = new CouponRedemption
+            {
+                CouponId = checkout.CouponId.Value,
+                UserId = checkout.UserId.Value,
+                Status = CouponRedemptionStatus.Reserved,
+                ReservedAtUtc = now
+            };
+        }
+
+        db.Orders.Add(order);
+        checkout.Order = order;
+        checkout.Status = CheckoutStatus.Completed;
+        checkout.CompletedAtUtc = now;
+        payment.CheckoutSession = null;
+        payment.CheckoutSessionId = null;
+        payment.Order = order;
+        payment.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+        AuditTrail.Add(db, auditContext, "BankTransferOrderCreated", "Order", order.Id, null,
+            new { status = order.Status.ToString(), checkoutSessionId = checkout.Id, paymentId = payment.Id },
+            "Pedido pendiente creado para una transferencia bancaria.");
+        await db.SaveChangesAsync(cancellationToken);
+        return AppResult<Order>.Success(order);
+    }
+
     public static async Task<AppResult<Order>> CompleteAsync(
         IApplicationDbContext db,
         CheckoutSession checkout,

@@ -481,6 +481,17 @@ public class CheckoutCartUseCase : ICheckoutCartUseCase
                 PaymentCreationPolicy.Default, cancellationToken);
             if (!payment.IsSuccess && payment.Error?.Code != "payment_creation_failed")
                 return AppResult<CheckoutResponse>.Failure(payment.Error!.Type, payment.Error.Message, payment.Error.Code);
+
+            if (payment.IsSuccess &&
+                string.Equals(request.PaymentProvider ?? "BankTransfer", "BankTransfer", StringComparison.OrdinalIgnoreCase))
+            {
+                var bankTransferPayment = await _db.Payments
+                    .SingleAsync(x => x.CheckoutSessionId == checkout.Id, cancellationToken);
+                var order = await CheckoutCompletion.CreatePendingBankTransferOrderAsync(
+                    _db, checkout, bankTransferPayment, _auditContext, cancellationToken);
+                if (!order.IsSuccess)
+                    return AppResult<CheckoutResponse>.Failure(order.Error!.Type, order.Error.Message, order.Error.Code);
+            }
         }
 
         var saved = await CheckoutSessionQueries.LoadAsync(_db, checkout.Id, userId, cancellationToken);

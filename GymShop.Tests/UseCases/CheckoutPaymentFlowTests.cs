@@ -30,9 +30,14 @@ public class CheckoutPaymentFlowTests
 
         Assert.True(checkout.IsSuccess);
         Assert.Equal(5, product.Stock);
-        Assert.Empty(db.Orders);
+        var pendingOrder = Assert.Single(db.Orders);
+        Assert.Equal(OrderStatus.Pending, pendingOrder.Status);
+        Assert.False(pendingOrder.StockReserved);
+        Assert.Equal(pendingOrder.Id, checkout.Value!.OrderId);
         Assert.Empty(db.CartItems);
         var payment = Assert.Single(db.Payments);
+        Assert.Equal(pendingOrder.Id, payment.OrderId);
+        Assert.Null(payment.CheckoutSessionId);
 
         await new AddCartItemUseCase(db).ExecuteAsync(user.Id, new AddCartItemRequest(product.Id, 1));
 
@@ -51,7 +56,7 @@ public class CheckoutPaymentFlowTests
     }
 
     [Fact]
-    public async Task Approved_payment_without_stock_does_not_create_order_or_negative_stock()
+    public async Task Approved_transfer_without_stock_cancels_visible_order_and_flags_review()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var user = await SeedUserAsync(db);
@@ -71,16 +76,17 @@ public class CheckoutPaymentFlowTests
             payment.Id,
             new UpdatePaymentStatusRequest("Approved", null, "Transferencia acreditada"));
 
-        Assert.False(approved.IsSuccess);
-        Assert.Equal("paid_checkout_stock_unavailable", approved.Error?.Code);
+        Assert.True(approved.IsSuccess);
         Assert.Equal(0, product.Stock);
-        Assert.Empty(db.Orders);
+        var order = Assert.Single(db.Orders);
+        Assert.Equal(OrderStatus.Canceled, order.Status);
+        Assert.Contains("Contactar al cliente", payment.FailureReason);
         Assert.Equal(PaymentStatus.Approved, payment.Status);
-        Assert.Equal(CheckoutStatus.StockUnavailable, db.CheckoutSessions.Single().Status);
+        Assert.Equal(CheckoutStatus.Completed, db.CheckoutSessions.Single().Status);
     }
 
     [Fact]
-    public async Task Approved_payment_with_coupon_that_became_unavailable_does_not_create_order()
+    public async Task Approved_transfer_consumes_coupon_reserved_when_order_was_created()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var user = await SeedUserAsync(db);
@@ -109,10 +115,12 @@ public class CheckoutPaymentFlowTests
             payment.Id,
             new UpdatePaymentStatusRequest("Approved", null, "Transferencia acreditada"));
 
-        Assert.False(approved.IsSuccess);
-        Assert.Empty(db.Orders);
-        Assert.Equal(2, product.Stock);
-        Assert.Equal(CheckoutStatus.StockUnavailable, db.CheckoutSessions.Single().Status);
+        Assert.True(approved.IsSuccess);
+        var order = Assert.Single(db.Orders);
+        Assert.Equal(OrderStatus.Paid, order.Status);
+        Assert.Equal(CouponRedemptionStatus.Consumed, order.CouponRedemption!.Status);
+        Assert.Equal(1, product.Stock);
+        Assert.Equal(CheckoutStatus.Completed, db.CheckoutSessions.Single().Status);
     }
 
     [Fact]
