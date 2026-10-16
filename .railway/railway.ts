@@ -7,7 +7,7 @@ export default defineRailway(() => {
   const api = service("api", {
     // dockerfilePath from CaC: "Dockerfile"
     // builder from CaC: "DOCKERFILE"
-    source: github("Martin-Plaza/e-commerce-vivero", { branch: "codex/admin-ui-polish", checkSuites: false }),
+    source: github("Martin-Plaza/e-commerce-vivero", { branch: "main", checkSuites: true }),
     healthcheck: "/health",
     healthcheckTimeout: 300,
     preDeploy: "dotnet GymShop.Api.dll --initialize-only",
