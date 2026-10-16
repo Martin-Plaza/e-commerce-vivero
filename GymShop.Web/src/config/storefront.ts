@@ -48,7 +48,7 @@ export const storefront = {
     filtersAction: 'Filtros', clearFilters: 'Limpiar filtros', relatedTitle: 'También te puede interesar',
     relatedEyebrow: 'SEGUÍ CULTIVANDO', resultsLabel: 'resultados', addToCart: 'Agregar al carrito',
   },
-  assets: { hero: '/images/nursery/hero-raiz-viva.png', campaign: '/images/nursery/potting-editorial.png' },
+  assets: { hero: '/images/nursery/hero-raiz-viva.webp', campaign: '/images/nursery/potting-editorial.webp' },
   categoryVisuals: {
     'plantas-interior': { symbol: '01', color: '#315c45' },
     'plantas-exterior': { symbol: '02', color: '#6f8f55' },

@@ -632,6 +632,55 @@ main { max-width:1320px; padding-top:28px; }
 .pickup-details strong { color:#b8dbc5; }
 .pickup-details span,.pickup-details p { color:#d4ddd7; }
 
+/* Avisos del storefront: superficies claras y texto legible en toda la experiencia. */
+.notice {
+  border-color:#7aa083;
+  background:#e4eee5;
+  color:#244b37;
+}
+.notice a,.notice strong { color:#18372a; }
+.error {
+  border-color:#c95d50;
+  background:#f8ded9;
+  color:#792f2a;
+}
+.error a,.error strong { color:#63241f; }
+.route-notice { box-shadow:0 8px 22px #315c4512; }
+.auth-card .notice,.auth-card .error { width:100%; line-height:1.45; overflow-wrap:anywhere; }
+.mfa-recovery-codes code {
+  border:1px solid #c7d5c9;
+  border-radius:8px;
+  background:#edf3ed;
+  color:#18372a;
+  font-weight:700;
+}
+
+/* Ajustes de contraste y alineación en navegación y detalle de producto. */
+.storefront-header .nav-menu > button span {
+  position:relative;
+  top:-1px;
+  display:inline-flex;
+  align-items:center;
+  line-height:1;
+}
+.in-stock { color:#35734a; font-weight:700; }
+.breadcrumbs { color:#65756b; }
+.breadcrumbs a { color:#3f6650; font-weight:600; text-decoration-color:#91a899; }
+.breadcrumbs a:hover { color:#244b37; }
+
+/* Páginas legales sobre el fondo claro del storefront. */
+.legal-page { color:#18372a; }
+.legal-heading>p:last-child,.legal-page section p,.legal-help { color:#4e6156; }
+.legal-page section { border-color:#d8cdbf; }
+.legal-page section h2 { color:#244b37; }
+.legal-page a { color:#9f4f30; font-weight:600; }
+.demo-warning { border-color:#c58a42; background:#fff0d2; color:#503a20; }
+.merchant-identity { background:#d8cdbf; }
+.merchant-identity>div { background:#fffaf2; }
+.merchant-identity dt { color:#66756c; }
+.withdrawal-lead { border-color:#8fac98 !important; background:#e7efe8; color:#18372a; }
+.withdrawal-lead p { color:#3f5d4d !important; }
+
 @media (max-width:850px) {
   .home-hero { min-height:680px; padding-top:330px; background:#f4efe5; }
   .home-hero > img,.home-hero::after { height:330px; }
@@ -652,6 +701,9 @@ main { max-width:1320px; padding-top:28px; }
   .category-grid { display:flex; }
   .category-tile { min-height:220px; }
   .commercial-card .product-image,.catalog-results .commercial-card .product-image { height:230px; }
+  .result-hero { min-width:0; overflow:hidden; }
+  .result-hero h1 { max-width:100%; font-size:clamp(32px,10vw,46px); line-height:.94; letter-spacing:-.035em; overflow-wrap:normal; word-break:normal; hyphens:none; }
+  .legal-heading h1 { font-size:clamp(40px,13vw,58px); overflow-wrap:break-word; }
 }
 
 /* Administración clara: la misma paleta cálida y botánica del storefront. */

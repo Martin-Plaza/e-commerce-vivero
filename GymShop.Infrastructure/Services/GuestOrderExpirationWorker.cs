@@ -1,3 +1,4 @@
+using GymShop.Application.Common;
 using GymShop.Domain.Enums;
 using GymShop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -23,8 +24,8 @@ public sealed class GuestOrderExpirationWorker(IServiceScopeFactory scopeFactory
             await using var scope = scopeFactory.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<GymShopDbContext>();
             var now = time.GetUtcNow().UtcDateTime;
-            var orders = await db.Orders.Include(x => x.Payments)
-                .Where(x => x.UserId == null && x.Status == OrderStatus.Pending && x.ExpiresAtUtc <= now)
+            var orders = await db.Orders.Include(x => x.Payments).Include(x => x.CouponRedemption)
+                .Where(x => x.Status == OrderStatus.Pending && !x.StockReserved && x.ExpiresAtUtc <= now)
                 .ToListAsync(cancellationToken);
             foreach (var order in orders)
             {
@@ -37,10 +38,11 @@ public sealed class GuestOrderExpirationWorker(IServiceScopeFactory scopeFactory
                     payment.FailureReason = order.CancellationReason;
                     payment.UpdatedAt = now;
                 }
+                CouponRedemptionLifecycle.Release(order);
             }
             if (orders.Count > 0) await db.SaveChangesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception exception) { logger.LogError(exception, "No se pudieron vencer las órdenes de transferencia de invitados."); }
+        catch (Exception exception) { logger.LogError(exception, "No se pudieron vencer las órdenes pendientes de transferencia."); }
     }
 }
