@@ -29,7 +29,7 @@ internal static class NurseryCatalogSeeder
         new("Sustratos y cuidado", "sustratos-cuidado", "Todo lo necesario para raíces sanas y crecimiento sostenido.", "#C89A4B", 6),
     ];
 
-    private static readonly ProductSeed[] Products =
+    private static readonly ProductSeed[] FeaturedProducts =
     [
         new("Monstera deliciosa", "Una planta tropical protagonista, de hojas amplias y caladas. Ideal para interiores luminosos sin sol directo.", 39900m, 14, "/images/products/monstera-deliciosa.webp", "plantas-interior", 5200, 34, 34, 85),
         new("Potus limón", "Enredadera resistente y de crecimiento rápido, perfecta para estantes altos o macetas colgantes.", 24500m, 21, "/images/products/regadera-savia.webp", "plantas-interior", 1800, 22, 22, 42),
@@ -40,6 +40,32 @@ internal static class NurseryCatalogSeeder
         new("Regadera Savia 5 L", "Regadera metálica en verde salvia, con pico largo para un riego preciso y suave.", 28900m, 11, "/images/products/regadera-savia.webp", "macetas-accesorios", 1200, 52, 22, 34),
         new("Maceta terracota clásica 24 cm", "Maceta de barro poroso con plato incluido. Favorece la respiración de las raíces.", 16500m, 24, "/images/products/lavanda.webp", "macetas-accesorios", 3100, 28, 28, 27),
     ];
+
+    private static readonly ProductSeed[] Products = BuildProducts();
+
+    private static ProductSeed[] BuildProducts()
+    {
+        const int targetCount = 200;
+        var generated = Enumerable.Range(1, targetCount - FeaturedProducts.Length).Select(index =>
+        {
+            var category = Categories[(index - 1) % Categories.Length];
+            var image = FeaturedProducts[(index - 1) % FeaturedProducts.Length].ImageUrl;
+            var number = index.ToString("D3");
+            return new ProductSeed(
+                $"Producto de prueba {number}",
+                $"Producto de catálogo generado para pruebas de búsqueda, filtros, paginación y stock. Referencia {number}.",
+                8500m + (index % 40) * 1250m,
+                5 + index % 46,
+                image,
+                category.Slug,
+                500 + index % 20 * 250,
+                12 + index % 24,
+                10 + index % 18,
+                8 + index % 30);
+        });
+
+        return FeaturedProducts.Concat(generated).ToArray();
+    }
 
     public static async Task SeedAsync(
         GymShopDbContext db,

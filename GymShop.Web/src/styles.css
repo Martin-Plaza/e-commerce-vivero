@@ -816,6 +816,44 @@ main { max-width:1320px; padding-top:28px; }
 .admin-app .notice { border-color:#6f9279; background:#e3eee5; color:#244b37; }
 .admin-app .error { border-color:#b95d54; background:#f8e0dc; color:#7b342e; }
 
+/* Contraste consistente para acciones, pedidos y estados sobre superficies claras. */
+.order-row {
+  border-color:#d8cdbf;
+  background:#fffaf2;
+  color:#18372a;
+}
+.order-row:hover:not(:disabled) { background:#f2eadf; }
+.order-row > b,.order-row > strong,.order-row > span { color:#18372a; }
+.order-row .order-state small { color:#5f7066; }
+.order-row .status { font-weight:700; }
+.status-expired { border-color:#8c5b24; background:#f3dfbd; color:#684315; font-weight:700; }
+.status-pending,.status-creating { background:#f7edcf; color:#775b15; }
+.status-approved,.status-paid,.status-shipped { background:#e1eee4; color:#286040; }
+.status-rejected,.status-canceled,.status-creationfailed { background:#f8e2df; color:#913f37; }
+.cart-page .text-button { color:#244b37 !important; font-weight:750; }
+.cart-drawer .text-button { color:#d9e7dc !important; }
+.admin-app .coupon-form-actions button:not(.primary),
+.admin-app .variant-remove {
+  border-color:#8d806f;
+  background:#f7f2e9;
+  color:#244b37;
+  font-weight:750;
+}
+.admin-app .coupon-form-actions button:not(.primary):disabled,
+.admin-app .variant-remove:disabled { color:#526359; opacity:1; }
+.variant-admin-row > label { min-width:0; }
+.variant-admin-row .variant-active {
+  min-height:44px;
+  flex-direction:row;
+  align-items:center;
+  gap:9px;
+  color:#244b37;
+  font-weight:700;
+}
+.variant-admin-row .variant-active input { width:auto; margin:0; }
+.admin-app .attribute-create { margin-bottom:20px; padding:0 16px 16px 0; }
+.admin-app .attribute-create .primary { margin-right:8px; }
+
 @media(max-width:760px) {
   .admin-app .admin-menu-button { border-color:#d6cbbc; background:#ece4d7; color:#18372a; }
   .admin-app .admin-sidebar { box-shadow:18px 0 55px #2e20163d; }
@@ -872,3 +910,19 @@ main { max-width:1320px; padding-top:28px; }
 .admin-app .shipment-tracking-management h4 { margin:0 0 4px; color:#f2f5f2; font-size:17px; }
 .admin-app .shipment-tracking-management label { color:#d8e0da; }
 .admin-app .shipment-tracking-management button { border-color:#9ab3a1; background:#dfe9e1; color:#244b37; font-weight:750; }
+
+/* El detalle del cliente conserva su panel oscuro con tipografía clara. */
+.admin-app .user-detail { border-color:#566158; background:#1c211d; color:#eef3ef; }
+.admin-app .user-detail > h2,
+.admin-app .user-detail > h3,
+.admin-app .user-detail > p:not(.eyebrow) { color:#f2f5f2; }
+.admin-app .user-detail .user-number { color:#9ed0ad; }
+.admin-app .user-detail .close { color:#fff; }
+.admin-app .user-detail .user-metrics article { border-color:#566158; background:#252c27; }
+.admin-app .user-detail .user-metrics span { color:#c9d3cc; }
+.admin-app .user-detail .user-metrics strong { color:#f2f5f2; }
+.admin-app .user-detail .admin-footnote { color:#c9d3cc; }
+.admin-app .user-detail .list-row { border-color:#d8cdbf; background:#fffaf2; color:#18372a; }
+.admin-app .user-detail .list-row strong { color:#18372a; }
+.admin-app .user-detail .list-row small { color:#5f7066; }
+.admin-app .user-detail .user-orders-link { color:#b8dbc5; font-weight:700; }
