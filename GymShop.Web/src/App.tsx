@@ -65,11 +65,31 @@ function AppShell() {
   return <div className={adminArea ? 'app admin-app' : 'app'}>
     <RouteSeo />
     <RouteLoadingIndicator />
+    <ScrollRevealManager />
     {!adminArea && <StorefrontHeader user={user} onLogout={logout} onCart={cart.openDrawer} cartCount={cart.count} />}
     {!adminArea && <main>{notice && <div className="notice route-notice" role="status">{notice.message}</div>}<StorefrontRoutes user={user} onAuth={(auth, destination) => { session.save(auth.user); setNotice({ message: `Hola, ${auth.user.name}.`, destination, shown: false }) }} /></main>}
     {adminArea && <AdminRoutes user={user} onLogout={logout} />}
     {!adminArea && <StorefrontFooter />}
   </div>
+}
+
+function ScrollRevealManager() {
+  const location = useLocation()
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    const selector = '.category-section,.featured-products,.editorial-section,.trust-section,.closing-cta,.catalog-intro,.catalog-search,.catalog-grid .product-card'
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-revealed'); observer.unobserve(entry.target) }
+    }), { threshold: .08, rootMargin: '0px 0px -45px' })
+    const observe = () => document.querySelectorAll(selector).forEach(element => {
+      if (!element.classList.contains('is-revealed')) { element.classList.add('reveal-on-scroll'); observer.observe(element) }
+    })
+    observe()
+    const mutations = new MutationObserver(observe)
+    mutations.observe(document.querySelector('main') ?? document.body, { childList: true, subtree: true })
+    return () => { mutations.disconnect(); observer.disconnect() }
+  }, [location.pathname])
+  return null
 }
 
 function StorefrontFooter() {

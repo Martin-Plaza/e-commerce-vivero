@@ -49,4 +49,26 @@ describe('selectores de variantes', () => {
     expect(screen.getByRole('radio', { name: 'Blanco' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Negro' })).toHaveAttribute('aria-checked', 'false')
   })
+
+  it('agrupa definiciones repetidas del mismo atributo en una sola sección', async () => {
+    vi.mocked(api.product).mockResolvedValue({
+      ...product,
+      productAttributes: [
+        { id: 10, name: 'Tamaño', presentation: 'Button', displayOrder: 0, options: [{ id: 101, value: '1 litro', visualValue: null, displayOrder: 0 }] },
+        { id: 11, name: 'tamaño', presentation: 'Button', displayOrder: 1, options: [{ id: 102, value: '5 litros', visualValue: null, displayOrder: 1 }] },
+        { id: 20, name: 'Material', presentation: 'Button', displayOrder: 2, options: [{ id: 201, value: 'Plástico', visualValue: null, displayOrder: 0 }] },
+        { id: 21, name: 'material', presentation: 'Button', displayOrder: 3, options: [{ id: 202, value: 'Cerámica', visualValue: null, displayOrder: 1 }] },
+      ],
+      variants: [
+        { sku: 'MAC-1-PLA', price: 100, stock: 2, isActive: true, attributes: { Tamaño: '1 litro', Material: 'Plástico' }, optionIds: [101, 201] },
+        { sku: 'MAC-5-CER', price: 120, stock: 2, isActive: true, attributes: { Tamaño: '5 litros', Material: 'Cerámica' }, optionIds: [102, 202] },
+      ],
+    })
+    setup()
+    expect(await screen.findAllByRole('group')).toHaveLength(2)
+    expect(screen.getByRole('radio', { name: '1 litro' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: '5 litros' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Plástico' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Cerámica' })).toBeInTheDocument()
+  })
 })

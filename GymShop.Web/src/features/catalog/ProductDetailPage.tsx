@@ -16,6 +16,26 @@ function legacyDefinitions(variants: ProductVariant[]): ProductAttributeDefiniti
   return names.map((name, index) => ({ id: -(index + 1), name, presentation: name.toLowerCase() === 'color' ? 'ColorSwatch' : 'Button', displayOrder: index, options: [...new Set(variants.map(v => v.attributes[name]).filter(Boolean))].map((value, order) => ({ id: next--, value, visualValue: null, displayOrder: order })) }))
 }
 
+function normalizeDefinitions(definitions: ProductAttributeDefinition[]): ProductAttributeDefinition[] {
+  const groups = new Map<string, ProductAttributeDefinition>()
+  for (const definition of definitions) {
+    const key = definition.name.trim().toLocaleLowerCase('es')
+    const current = groups.get(key)
+    if (!current) {
+      groups.set(key, { ...definition, name: definition.name.trim(), options: [...definition.options] })
+      continue
+    }
+    const values = new Set(current.options.map(option => option.value.trim().toLocaleLowerCase('es')))
+    for (const option of definition.options) {
+      const optionKey = option.value.trim().toLocaleLowerCase('es')
+      if (!values.has(optionKey)) { current.options.push(option); values.add(optionKey) }
+    }
+  }
+  return [...groups.values()]
+    .map(attribute => ({ ...attribute, options: [...attribute.options].sort((a, b) => a.displayOrder - b.displayOrder) }))
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+}
+
 export function ProductDetailPage() {
   const { productId } = useParams(); const cart = useCart()
   const [product, setProduct] = useState<Product | null>(null); const [selected, setSelected] = useState<Record<number, number>>({})
@@ -23,9 +43,15 @@ export function ProductDetailPage() {
   useEffect(() => { const id = Number(productId); setLoading(true); setError(''); setNotFound(false); setRelated([]); if (!Number.isInteger(id) || id < 1) { setNotFound(true); setError('El producto solicitado no es válido.'); setLoading(false); return }
     api.product(id).then(result => { const normalized = { ...result, variants: result.variants ?? [], colorImages: result.colorImages ?? {} }; setProduct(normalized); setSelected({}); setQuantity(normalized.variants.length ? 1 : normalized.stock > 0 ? 1 : 0); const slug = normalized.category?.slug; if (slug) return api.products(false).then(products => setRelated(products.filter(item => item.id !== result.id && item.category?.slug === slug).slice(0, 3))).catch(() => undefined) }).catch(value => { const missing = value instanceof ApiError && value.status === 404; setNotFound(missing); setError(missing ? 'El producto no existe o ya no está activo.' : value instanceof ApiError ? value.message : 'No pudimos cargar el producto.') }).finally(() => setLoading(false)) }, [productId])
   const variants = useMemo(() => (product?.variants ?? []).filter(v => v.isActive), [product])
-  const definitions = useMemo(() => product?.productAttributes?.length ? product.productAttributes : legacyDefinitions(variants), [product, variants])
+  const rawDefinitions = useMemo(() => product?.productAttributes?.length ? product.productAttributes : legacyDefinitions(variants), [product, variants])
+  const definitions = useMemo(() => normalizeDefinitions(rawDefinitions), [rawDefinitions])
+  const rawOptionById = useMemo(() => new Map(rawDefinitions.flatMap(a => a.options.map(o => [o.id, { value: o.value, attributeName: a.name }] as const))), [rawDefinitions])
   const optionById = useMemo(() => new Map(definitions.flatMap(a => a.options.map(o => [o.id, { ...o, attributeId: a.id }] as const))), [definitions])
-  const variantOptions = (variant: ProductVariant) => variant.optionIds?.length ? variant.optionIds : definitions.flatMap(a => { const value = Object.entries(variant.attributes).find(([name]) => name.toLowerCase() === a.name.toLowerCase())?.[1]; return a.options.filter(o => o.value === value).map(o => o.id) })
+  const variantOptions = (variant: ProductVariant) => definitions.flatMap(attribute => {
+    const attributeValue = Object.entries(variant.attributes).find(([name]) => name.toLocaleLowerCase('es') === attribute.name.toLocaleLowerCase('es'))?.[1]
+    const value = attributeValue ?? variant.optionIds?.map(id => rawOptionById.get(id)).find(option => option?.attributeName.toLocaleLowerCase('es') === attribute.name.toLocaleLowerCase('es'))?.value
+    return attribute.options.filter(option => option.value.toLocaleLowerCase('es') === value?.toLocaleLowerCase('es')).map(option => option.id)
+  })
   const matches = (variant: ProductVariant, choices: Record<number, number>) => Object.entries(choices).every(([attributeId, optionId]) => variantOptions(variant).includes(optionId) && optionById.get(optionId)?.attributeId === Number(attributeId))
   const selectedVariant = variants.find(v => definitions.length > 0 && definitions.every(a => selected[a.id]) && matches(v, selected))
   const choose = (attributeId: number, optionId: number) => { const next = { ...selected, [attributeId]: optionId }; for (const key of Object.keys(next).map(Number)) if (key !== attributeId && !variants.some(v => v.stock > 0 && matches(v, next))) delete next[key]; setSelected(next); setQuantity(1) }
