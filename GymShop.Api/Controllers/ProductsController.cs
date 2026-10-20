@@ -14,19 +14,22 @@ public class ProductsController : ApiControllerBase
     private readonly ICreateProductUseCase _createProduct;
     private readonly IUpdateProductUseCase _updateProduct;
     private readonly IUpdateProductStatusUseCase _updateProductStatus;
+    private readonly IDeleteProductUseCase _deleteProduct;
 
     public ProductsController(
         IGetProductsUseCase getProducts,
         IGetProductByIdUseCase getProductById,
         ICreateProductUseCase createProduct,
         IUpdateProductUseCase updateProduct,
-        IUpdateProductStatusUseCase updateProductStatus)
+        IUpdateProductStatusUseCase updateProductStatus,
+        IDeleteProductUseCase deleteProduct)
     {
         _getProducts = getProducts;
         _getProductById = getProductById;
         _createProduct = createProduct;
         _updateProduct = updateProduct;
         _updateProductStatus = updateProductStatus;
+        _deleteProduct = deleteProduct;
     }
 
 
@@ -95,4 +98,9 @@ public class ProductsController : ApiControllerBase
     {
         return FromResult(await _updateProductStatus.ExecuteAsync(id, request, cancellationToken));
     }
+
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken) =>
+        FromResult(await _deleteProduct.ExecuteAsync(id, cancellationToken));
 }

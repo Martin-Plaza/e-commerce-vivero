@@ -28,7 +28,7 @@ export function filterAndSortProducts(products: Product[], filters: CatalogFilte
   const filtered = products.filter(product => {
     const searchable = `${product.name} ${product.description ?? ''}`.toLocaleLowerCase('es')
     if (query && !searchable.includes(query)) return false
-    if (filters.category && product.category?.slug !== filters.category) return false
+    if (filters.category && !(product.categories?.some(category => category.slug === filters.category) ?? product.category?.slug === filters.category)) return false
     if (filters.availability === 'available' && product.stock < 1) return false
     if (filters.availability === 'unavailable' && product.stock > 0) return false
     if (filters.minPrice !== null && product.price < filters.minPrice) return false

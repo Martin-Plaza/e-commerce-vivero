@@ -40,7 +40,7 @@ export function UsersAdmin() {
   }
 
   return <section className="admin-page users-admin">
-    <div className="admin-page-heading"><div><p className="eyebrow">SUPERADMIN</p><h1>Usuarios y clientes</h1><p>Clientes, personal, permisos y actividad comercial.</p></div><button className="primary" onClick={() => setCreating(true)}>Crear usuario</button></div>
+    <div className="admin-page-heading"><div><p className="eyebrow">SUPERADMIN</p><h1>Usuarios y clientes</h1><p>Clientes, personal, permisos y actividad comercial.</p></div><button className="primary admin-create-button" aria-label="Crear usuario" onClick={() => setCreating(true)}>+ Crear usuario</button></div>
     <AdminFeedback error={error} success={success} />
     <form className="admin-filters users-filters" onSubmit={event => { event.preventDefault(); setSearch(searchInput.trim()) }}>
       <label className="admin-search">Nombre o email<input value={searchInput} onChange={event => setSearchInput(event.target.value)} placeholder="Buscar usuarios" /></label>

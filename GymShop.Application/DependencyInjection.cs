@@ -49,10 +49,12 @@ public static class DependencyInjection
         services.AddScoped<ICreateCategoryUseCase, CreateCategoryUseCase>();
         services.AddScoped<IUpdateCategoryUseCase, UpdateCategoryUseCase>();
         services.AddScoped<IUpdateCategoryStatusUseCase, UpdateCategoryStatusUseCase>();
+        services.AddScoped<IDeleteCategoryUseCase, DeleteCategoryUseCase>();
         services.AddScoped<IGetProductByIdUseCase, GetProductByIdUseCase>();
         services.AddScoped<ICreateProductUseCase, CreateProductUseCase>();
         services.AddScoped<IUpdateProductUseCase, UpdateProductUseCase>();
         services.AddScoped<IUpdateProductStatusUseCase, UpdateProductStatusUseCase>();
+        services.AddScoped<IDeleteProductUseCase, DeleteProductUseCase>();
         services.AddScoped<IGetStockMovementsUseCase, GetStockMovementsUseCase>();
         services.AddScoped<IAdjustStockUseCase, AdjustStockUseCase>();
 

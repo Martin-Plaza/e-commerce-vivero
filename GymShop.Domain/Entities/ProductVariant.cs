@@ -6,6 +6,7 @@ public class ProductVariant
     public int ProductId { get; set; }
     public string Sku { get; set; } = string.Empty;
     public decimal? Price { get; set; }
+    public string? ImageUrl { get; set; }
     public int Stock { get; set; }
     public int? PackageWeightGrams { get; set; }
     public decimal? PackageLengthCm { get; set; }

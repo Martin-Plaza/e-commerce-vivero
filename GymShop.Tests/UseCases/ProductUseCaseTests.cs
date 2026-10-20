@@ -72,13 +72,13 @@ public class ProductUseCaseTests
     }
 
     [Fact]
-    public async Task CreateProduct_requires_image()
+    public async Task CreateProduct_allows_missing_general_image()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var result = await new CreateProductUseCase(db).ExecuteAsync(new CreateProductRequest("Producto", null, 10, 1, null));
-        Assert.False(result.IsSuccess);
-        Assert.Equal(AppErrorType.Validation, result.Error?.Type);
-        Assert.Empty(db.Products);
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value?.ImageUrl);
+        Assert.Single(db.Products);
     }
 
     [Fact]
@@ -108,10 +108,12 @@ public class ProductUseCaseTests
         await db.SaveChangesAsync();
 
         var created = await new CreateProductUseCase(db).ExecuteAsync(
-            new CreateProductRequest("Producto", "Descripción", 100, 5, "/images/producto.webp", strength.Id));
+            new CreateProductRequest("Producto", "Descripción", 100, 5, "/images/producto.webp", strength.Id,
+                CategoryIds: [strength.Id, cardio.Id]));
 
         Assert.True(created.IsSuccess);
         Assert.Equal("fuerza", created.Value?.Category?.Slug);
+        Assert.Equal(2, created.Value?.Categories?.Count);
 
         var updated = await new UpdateProductUseCase(db).ExecuteAsync(
             created.Value!.Id,
@@ -119,6 +121,7 @@ public class ProductUseCaseTests
 
         Assert.True(updated.IsSuccess);
         Assert.Equal("cardio", updated.Value?.Category?.Slug);
+        Assert.Single(updated.Value?.Categories!);
         Assert.Equal(cardio.Id, db.Products.Single().CategoryId);
     }
 

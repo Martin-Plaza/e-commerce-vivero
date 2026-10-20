@@ -26,7 +26,8 @@ public sealed class MockPasswordResetEmailSender(
     public Task<EmailSendResult> SendAsync(string email, string code, bool deliver = true, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Mock password-reset email generated for {Email}.", email);
-        return Task.FromResult(EmailSendResult.Accepted(options.Value.ExposeDevelopmentCodes ? code : null));
+        return Task.FromResult(EmailSendResult.Accepted(
+            deliver && options.Value.ExposeDevelopmentCodes ? code : null));
     }
 }
 

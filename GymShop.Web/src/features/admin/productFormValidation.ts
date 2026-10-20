@@ -8,6 +8,7 @@ export interface ProductFormValues {
   price: string
   stock: string
   categoryId: string
+  categoryIds: string[]
   imageUrl: string
   packageWeightGrams: string
   packageLengthCm: string
@@ -18,10 +19,10 @@ export interface ProductFormValues {
   colorImages: Record<string, string>
 }
 
-export type ProductField = keyof Omit<ProductFormValues, 'isActive' | 'variants' | 'colorImages'>
+export type ProductField = keyof Omit<ProductFormValues, 'isActive' | 'variants' | 'colorImages' | 'categoryIds'>
 export type ProductFormErrors = Partial<Record<ProductField, string>>
 
-export const emptyProductValues = (): ProductFormValues => ({ name: '', description: '', price: '', stock: '', categoryId: '', imageUrl: '', packageWeightGrams: '', packageLengthCm: '', packageWidthCm: '', packageHeightCm: '', isActive: true, variants: [], colorImages: {} })
+export const emptyProductValues = (): ProductFormValues => ({ name: '', description: '', price: '', stock: '', categoryId: '', categoryIds: [], imageUrl: '', packageWeightGrams: '', packageLengthCm: '', packageWidthCm: '', packageHeightCm: '', isActive: true, variants: [], colorImages: {} })
 
 export const productToFormValues = (product: Product): ProductFormValues => ({
   name: product.name,
@@ -29,6 +30,7 @@ export const productToFormValues = (product: Product): ProductFormValues => ({
   price: String(product.price),
   stock: String(product.stock),
   categoryId: product.category ? String(product.category.id) : '',
+  categoryIds: (product.categories?.length ? product.categories : product.category ? [product.category] : []).map(category => String(category.id)),
   imageUrl: product.imageUrl || '',
   packageWeightGrams: product.packageWeightGrams == null ? '' : String(product.packageWeightGrams),
   packageLengthCm: product.packageLengthCm == null ? '' : String(product.packageLengthCm),
@@ -61,11 +63,12 @@ export function validateProduct(values: ProductFormValues): ProductFormErrors {
   if (!values.price.trim() || !Number.isFinite(price) || price <= 0) errors.price = 'El precio debe ser mayor a cero.'
   else if (price > PRODUCT_LIMITS.maxPrice || !/^\d+(\.\d{1,2})?$/.test(values.price.trim())) errors.price = 'El precio debe tener hasta 16 dígitos enteros y 2 decimales.'
   if (!values.stock.trim() || !Number.isInteger(stock) || stock < 0) errors.stock = 'El stock debe ser un número entero mayor o igual a cero.'
-  if (!values.categoryId) errors.categoryId = 'Seleccioná una categoría.'
-  if (!values.packageWeightGrams.trim() || !Number.isInteger(packageWeightGrams) || packageWeightGrams <= 0 || packageWeightGrams > 1_000_000) errors.packageWeightGrams = 'Ingresá el peso empaquetado en gramos.'
+  if (!values.categoryIds.length && !values.categoryId) errors.categoryId = 'Seleccioná al menos una categoría.'
+  const hasPackageValue = [values.packageWeightGrams, values.packageLengthCm, values.packageWidthCm, values.packageHeightCm].some(value => value.trim())
+  if (hasPackageValue && (!values.packageWeightGrams.trim() || !Number.isInteger(packageWeightGrams) || packageWeightGrams <= 0 || packageWeightGrams > 1_000_000)) errors.packageWeightGrams = 'Ingresá el peso empaquetado en gramos.'
   ;(['packageLengthCm', 'packageWidthCm', 'packageHeightCm'] as const).forEach((field, index) => {
     const value = packageDimensions[index]
-    if (!values[field].trim() || !Number.isFinite(value) || value <= 0 || value > 1000 || !/^\d+(\.\d{1,2})?$/.test(values[field].trim())) errors[field] = 'Ingresá una medida válida en cm (hasta 2 decimales).'
+    if (hasPackageValue && (!values[field].trim() || !Number.isFinite(value) || value <= 0 || value > 1000 || !/^\d+(\.\d{1,2})?$/.test(values[field].trim()))) errors[field] = 'Ingresá una medida válida en cm (hasta 2 decimales).'
   })
   if (imageUrl.length > PRODUCT_LIMITS.imageUrl) errors.imageUrl = `La URL no puede superar los ${PRODUCT_LIMITS.imageUrl} caracteres.`
   else if (!isValidProductImageUrl(imageUrl)) errors.imageUrl = 'Ingresá una URL http/https o una ruta local que comience con “/”.'
@@ -76,8 +79,8 @@ export function toProductInput(values: ProductFormValues): CreateProductInput {
   return {
     name: values.name.trim(), description: values.description.trim() || null,
     price: Number(values.price), stock: Number(values.stock),
-    imageUrl: values.imageUrl.trim() || null, categoryId: Number(values.categoryId), variants: values.variants, colorImages: values.colorImages,
-    packageWeightGrams: Number(values.packageWeightGrams), packageLengthCm: Number(values.packageLengthCm), packageWidthCm: Number(values.packageWidthCm), packageHeightCm: Number(values.packageHeightCm),
+    imageUrl: values.imageUrl.trim() || null, categoryId: Number(values.categoryIds[0] || values.categoryId), categoryIds: values.categoryIds.map(Number), variants: values.variants, colorImages: values.colorImages,
+    packageWeightGrams: values.packageWeightGrams ? Number(values.packageWeightGrams) : null, packageLengthCm: values.packageLengthCm ? Number(values.packageLengthCm) : null, packageWidthCm: values.packageWidthCm ? Number(values.packageWidthCm) : null, packageHeightCm: values.packageHeightCm ? Number(values.packageHeightCm) : null,
   }
 }
 
@@ -85,7 +88,7 @@ export function toUpdateProductInput(values: ProductFormValues): UpdateProductIn
   return {
     name: values.name.trim(), description: values.description.trim() || null,
     price: Number(values.price), imageUrl: values.imageUrl.trim() || null,
-    categoryId: Number(values.categoryId), isActive: values.isActive, variants: values.variants, colorImages: values.colorImages,
-    packageWeightGrams: Number(values.packageWeightGrams), packageLengthCm: Number(values.packageLengthCm), packageWidthCm: Number(values.packageWidthCm), packageHeightCm: Number(values.packageHeightCm),
+    categoryId: Number(values.categoryIds[0] || values.categoryId), categoryIds: values.categoryIds.map(Number), isActive: values.isActive, variants: values.variants, colorImages: values.colorImages,
+    packageWeightGrams: values.packageWeightGrams ? Number(values.packageWeightGrams) : null, packageLengthCm: values.packageLengthCm ? Number(values.packageLengthCm) : null, packageWidthCm: values.packageWidthCm ? Number(values.packageWidthCm) : null, packageHeightCm: values.packageHeightCm ? Number(values.packageHeightCm) : null,
   }
 }

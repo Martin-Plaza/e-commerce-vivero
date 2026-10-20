@@ -38,6 +38,11 @@ public interface IUpdateProductStatusUseCase
     Task<AppResult> ExecuteAsync(int id, UpdateProductStatusRequest request, CancellationToken cancellationToken = default);
 }
 
+public interface IDeleteProductUseCase
+{
+    Task<AppResult> ExecuteAsync(int id, CancellationToken cancellationToken = default);
+}
+
 public class GetProductsUseCase : IGetProductsUseCase
 {
     private readonly IApplicationDbContext _db;
@@ -49,7 +54,8 @@ public class GetProductsUseCase : IGetProductsUseCase
 
     public async Task<List<ProductResponse>> ExecuteAsync(ProductQuery request, bool canViewInactive, CancellationToken cancellationToken = default)
     {
-        IQueryable<Product> query = _db.Products.AsNoTracking().Include(x => x.Category).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages);
+        IQueryable<Product> query = _db.Products.AsNoTracking().Include(x => x.Category).Include(x => x.Categories).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages);
+        query = query.Where(x => !x.IsDeleted);
         if (!request.IncludeInactive || !canViewInactive)
         {
             query = query.Where(x => x.IsActive);
@@ -64,7 +70,7 @@ public class GetProductsUseCase : IGetProductsUseCase
         if (!string.IsNullOrWhiteSpace(request.Category))
         {
             var category = request.Category.Trim().ToLower();
-            query = query.Where(x => x.Category != null && x.Category.Slug == category);
+            query = query.Where(x => x.Categories.Any(c => c.Slug == category) || (x.Category != null && x.Category.Slug == category));
         }
         if (request.InStock.HasValue)
             query = request.InStock.Value ? query.Where(x => x.Variants.Any() ? x.Variants.Any(v => v.IsActive && v.Stock > 0) : x.Stock > 0) : query.Where(x => x.Variants.Any() ? !x.Variants.Any(v => v.IsActive && v.Stock > 0) : x.Stock == 0);
@@ -102,8 +108,8 @@ public class GetProductByIdUseCase : IGetProductByIdUseCase
 
     public async Task<AppResult<ProductResponse>> ExecuteAsync(int id, bool canViewInactive, CancellationToken cancellationToken = default)
     {
-        var product = await _db.Products.AsNoTracking().Include(x => x.Category).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages)
-            .SingleOrDefaultAsync(x => x.Id == id && (x.IsActive || canViewInactive), cancellationToken);
+        var product = await _db.Products.AsNoTracking().Include(x => x.Category).Include(x => x.Categories).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages)
+            .SingleOrDefaultAsync(x => x.Id == id && !x.IsDeleted && (x.IsActive || canViewInactive), cancellationToken);
         return product is null
             ? AppResult<ProductResponse>.Failure(AppErrorType.NotFound, "Producto no encontrado.")
             : AppResult<ProductResponse>.Success(ProductMapper.ToResponse(product));
@@ -128,8 +134,6 @@ public class CreateProductUseCase : ICreateProductUseCase
         {
             return AppResult<ProductResponse>.Failure(AppErrorType.Validation, validationError);
         }
-        if (string.IsNullOrWhiteSpace(request.ImageUrl))
-            return AppResult<ProductResponse>.Failure(AppErrorType.Validation, "Agregá una imagen o su URL.");
         var packageError = ProductValidator.ValidatePackage(request.PackageWeightGrams, request.PackageLengthCm, request.PackageWidthCm, request.PackageHeightCm);
         if (packageError is not null)
             return AppResult<ProductResponse>.Failure(AppErrorType.Validation, packageError);
@@ -139,11 +143,11 @@ public class CreateProductUseCase : ICreateProductUseCase
         var colorImagesError = ProductVariantManager.ValidateColorImages(request.ColorImages, options);
         if (colorImagesError is not null) return AppResult<ProductResponse>.Failure(AppErrorType.Validation, colorImagesError);
 
-        var category = request.CategoryId.HasValue
-            ? await _db.Categories.SingleOrDefaultAsync(x => x.Id == request.CategoryId && x.IsActive, cancellationToken)
-            : null;
-        if (request.CategoryId.HasValue && category is null)
-            return AppResult<ProductResponse>.Failure(AppErrorType.Validation, "La categoría indicada no existe o está inactiva.");
+        var categoryIds = (request.CategoryIds ?? (request.CategoryId.HasValue ? [request.CategoryId.Value] : [])).Distinct().ToList();
+        var categories = await _db.Categories.Where(x => categoryIds.Contains(x.Id) && x.IsActive).ToListAsync(cancellationToken);
+        if (categories.Count != categoryIds.Count)
+            return AppResult<ProductResponse>.Failure(AppErrorType.Validation, "Una categoría indicada no existe o está inactiva.");
+        categories = categoryIds.Select(id => categories.Single(category => category.Id == id)).ToList();
 
         var product = new Product
         {
@@ -157,8 +161,9 @@ public class CreateProductUseCase : ICreateProductUseCase
             PackageWidthCm = request.PackageWidthCm,
             PackageHeightCm = request.PackageHeightCm,
             IsActive = true,
-            Category = category
+            Category = categories.FirstOrDefault()
         };
+        foreach (var category in categories) product.Categories.Add(category);
         ProductVariantManager.Replace(product, request.Variants, options);
         ProductVariantManager.ReplaceColorImages(product, request.ColorImages);
         if (product.Variants.Count > 0) product.Stock = 0;
@@ -194,7 +199,7 @@ public class UpdateProductUseCase : IUpdateProductUseCase
 
     public async Task<AppResult<ProductResponse>> ExecuteAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
-        var product = await _db.Products.Include(x => x.Category).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var product = await _db.Products.Include(x => x.Category).Include(x => x.Categories).Include(x => x.Variants).ThenInclude(x => x.Attributes).ThenInclude(x => x.ProductAttributeOption).ThenInclude(x => x!.ProductAttribute).Include(x => x.ColorImages).SingleOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
         if (product is null)
         {
             return AppResult<ProductResponse>.Failure(AppErrorType.NotFound, "Producto no encontrado.");
@@ -214,11 +219,11 @@ public class UpdateProductUseCase : IUpdateProductUseCase
         var colorImagesError = ProductVariantManager.ValidateColorImages(request.ColorImages, options);
         if (colorImagesError is not null) return AppResult<ProductResponse>.Failure(AppErrorType.Validation, colorImagesError);
 
-        var category = request.CategoryId.HasValue
-            ? await _db.Categories.SingleOrDefaultAsync(x => x.Id == request.CategoryId && (x.IsActive || x.Id == product.CategoryId), cancellationToken)
-            : null;
-        if (request.CategoryId.HasValue && category is null)
-            return AppResult<ProductResponse>.Failure(AppErrorType.Validation, "La categoría indicada no existe o está inactiva.");
+        var categoryIds = (request.CategoryIds ?? (request.CategoryId.HasValue ? [request.CategoryId.Value] : [])).Distinct().ToList();
+        var categories = await _db.Categories.Where(x => categoryIds.Contains(x.Id) && (x.IsActive || x.Id == product.CategoryId || product.Categories.Select(c => c.Id).Contains(x.Id))).ToListAsync(cancellationToken);
+        if (categories.Count != categoryIds.Count)
+            return AppResult<ProductResponse>.Failure(AppErrorType.Validation, "Una categoría indicada no existe o está inactiva.");
+        categories = categoryIds.Select(id => categories.Single(category => category.Id == id)).ToList();
 
         var oldValue = new { product.Name, product.Price, product.Stock, product.IsActive, product.PackageWeightGrams, product.PackageLengthCm, product.PackageWidthCm, product.PackageHeightCm };
         var previousVariantStocks = product.Variants.Where(x => x.Id > 0).ToDictionary(x => x.Id, x => x.Stock);
@@ -231,7 +236,9 @@ public class UpdateProductUseCase : IUpdateProductUseCase
         product.PackageWidthCm = request.PackageWidthCm;
         product.PackageHeightCm = request.PackageHeightCm;
         product.IsActive = request.IsActive;
-        product.Category = category;
+        product.Category = categories.FirstOrDefault();
+        product.Categories.Clear();
+        foreach (var category in categories) product.Categories.Add(category);
         product.UpdatedAt = DateTime.UtcNow;
         ProductVariantManager.Replace(product, request.Variants, options);
         ProductVariantManager.ReplaceColorImages(product, request.ColorImages);
@@ -274,7 +281,7 @@ public class UpdateProductStatusUseCase : IUpdateProductStatusUseCase
 
     public async Task<AppResult> ExecuteAsync(int id, UpdateProductStatusRequest request, CancellationToken cancellationToken = default)
     {
-        var product = await _db.Products.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var product = await _db.Products.SingleOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
         if (product is null)
         {
             return AppResult.Failure(AppErrorType.NotFound, "Producto no encontrado.");
@@ -296,6 +303,33 @@ public class UpdateProductStatusUseCase : IUpdateProductStatusUseCase
             return AppResult.Failure(AppErrorType.Conflict, "El producto fue modificado por otra operacion. Volve a intentar.");
         }
 
+        return AppResult.Success();
+    }
+}
+
+public class DeleteProductUseCase(IApplicationDbContext db, IAuditContext? auditContext = null) : IDeleteProductUseCase
+{
+    public async Task<AppResult> ExecuteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var product = await db.Products.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (product is null) return AppResult.Failure(AppErrorType.NotFound, "Producto no encontrado.");
+
+        var hasHistory = await db.OrderItems.AnyAsync(x => x.ProductId == id, cancellationToken)
+            || await db.CheckoutItems.AnyAsync(x => x.ProductId == id, cancellationToken);
+        db.CartItems.RemoveRange(db.CartItems.Where(x => x.ProductId == id));
+        AuditTrail.Add(db, auditContext, "ProductDeleted", "Product", product.Id, new { product.Name, product.Price, product.IsActive }, null);
+        if (hasHistory)
+        {
+            product.IsActive = false;
+            product.IsDeleted = true;
+            product.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            db.StockMovements.RemoveRange(db.StockMovements.Where(x => x.ProductId == id));
+            db.Products.Remove(product);
+        }
+        await db.SaveChangesAsync(cancellationToken);
         return AppResult.Success();
     }
 }
@@ -369,7 +403,8 @@ internal static class ProductMapper
                 (x.PackageWeightGrams ?? product.PackageWeightGrams).HasValue
                     && (x.PackageLengthCm ?? product.PackageLengthCm).HasValue
                     && (x.PackageWidthCm ?? product.PackageWidthCm).HasValue
-                    && (x.PackageHeightCm ?? product.PackageHeightCm).HasValue)).ToList(),
+                    && (x.PackageHeightCm ?? product.PackageHeightCm).HasValue,
+                x.ImageUrl)).ToList(),
             product.ColorImages.SelectMany(x => x.ProductAttributeOptionId.HasValue ? new[] { new KeyValuePair<string,string>(x.ProductAttributeOptionId.Value.ToString(), x.ImageUrl), new KeyValuePair<string,string>(x.Color, x.ImageUrl) } : new[] { new KeyValuePair<string,string>(x.Color, x.ImageUrl) }).GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase).ToDictionary(x => x.Key, x => x.First().Value, StringComparer.OrdinalIgnoreCase),
             product.Variants.SelectMany(v => v.Attributes).Where(x => x.ProductAttributeOption != null).GroupBy(x => x.ProductAttributeOption!.ProductAttribute)
                 .OrderBy(g => g.Key.DisplayOrder).ThenBy(g => g.Key.Name).Select(g => new ProductAttributeSelectionResponse(g.Key.Id, g.Key.Name, g.Key.Presentation, g.Key.DisplayOrder,
@@ -378,7 +413,8 @@ internal static class ProductMapper
             product.PackageLengthCm,
             product.PackageWidthCm,
             product.PackageHeightCm,
-            product.PackageWeightGrams.HasValue && product.PackageLengthCm.HasValue && product.PackageWidthCm.HasValue && product.PackageHeightCm.HasValue
+            product.PackageWeightGrams.HasValue && product.PackageLengthCm.HasValue && product.PackageWidthCm.HasValue && product.PackageHeightCm.HasValue,
+            product.Categories.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).Select(x => new CategorySummaryResponse(x.Id, x.Name, x.Slug)).ToList()
         );
     }
 }
@@ -425,6 +461,7 @@ internal static class ProductVariantManager
             var variant = input.Id.HasValue ? product.Variants.SingleOrDefault(x => x.Id == input.Id) : null;
             if (variant is null) { variant = new ProductVariant(); product.Variants.Add(variant); }
             variant.Sku = input.Sku.Trim(); variant.Price = input.Price; variant.Stock = input.Stock; variant.IsActive = input.IsActive;
+            variant.ImageUrl = string.IsNullOrWhiteSpace(input.ImageUrl) ? null : input.ImageUrl.Trim();
             variant.PackageWeightGrams = input.PackageWeightGrams;
             variant.PackageLengthCm = input.PackageLengthCm;
             variant.PackageWidthCm = input.PackageWidthCm;

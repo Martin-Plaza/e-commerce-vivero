@@ -15,7 +15,8 @@ public class CategoriesController(
     IGetAdminCategoryByIdUseCase getAdminCategory,
     ICreateCategoryUseCase createCategory,
     IUpdateCategoryUseCase updateCategory,
-    IUpdateCategoryStatusUseCase updateCategoryStatus) : ApiControllerBase
+    IUpdateCategoryStatusUseCase updateCategoryStatus,
+    IDeleteCategoryUseCase deleteCategory) : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<CategoryResponse>), StatusCodes.Status200OK)]
@@ -45,4 +46,8 @@ public class CategoriesController(
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPatch("{id:int}/status")]
     public async Task<ActionResult> UpdateStatus(int id, UpdateCategoryStatusRequest request, CancellationToken cancellationToken) => FromResult(await updateCategoryStatus.ExecuteAsync(id, request, cancellationToken));
+
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken) => FromResult(await deleteCategory.ExecuteAsync(id, cancellationToken));
 }

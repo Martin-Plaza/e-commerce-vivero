@@ -30,10 +30,10 @@ export function ProductsAdmin() {
   }, [])
   useEffect(() => { void loadInitial() }, [loadInitial])
 
-  const categories = useMemo(() => [...new Set(products.map(product => product.category?.name).filter((value): value is string => Boolean(value)))].sort(), [products])
+  const categories = useMemo(() => [...new Set(products.flatMap(product => product.categories?.length ? product.categories.map(item => item.name) : product.category ? [product.category.name] : []))].sort(), [products])
   const filtered = useMemo(() => products.filter(product => {
     const matchesSearch = product.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
-    const matchesCategory = category === 'all' || product.category?.name === category
+    const matchesCategory = category === 'all' || (product.categories?.some(item => item.name === category) ?? product.category?.name === category)
     const matchesStatus = status === 'all' || (status === 'active' ? product.isActive : !product.isActive)
     const matchesStock = stock === 'all' || (stock === 'available' && product.stock > 0) || (stock === 'low' && product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD) || (stock === 'none' && product.stock === 0)
     return matchesSearch && matchesCategory && matchesStatus && matchesStock
@@ -61,10 +61,14 @@ export function ProductsAdmin() {
     if (!window.confirm(`¿Querés ${action} “${product.name}”?`)) return
     void mutate(product, () => api.setProductStatus(product.id, !product.isActive), `${product.name} fue ${product.isActive ? 'desactivado' : 'activado'} correctamente.`)
   }
+  const remove = (product: Product) => {
+    if (!window.confirm(`¿Eliminar definitivamente “${product.name}”? Esta acción no se puede deshacer.`)) return
+    void mutate(product, () => api.deleteProduct(product.id), `${product.name} fue eliminado correctamente.`)
+  }
   const clear = () => { setSearch(''); setCategory('all'); setStatus('all'); setStock('all') }
 
   return <section className="admin-page">
-    <div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>Productos</h1><p>Consultá el catálogo completo y administrá disponibilidad y stock.</p></div><div className="admin-heading-actions"><span>{filtered.length} de {products.length}</span><Link className="primary link-button" to="/admin/productos/nuevo">Nuevo producto</Link></div></div>
+    <div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>Productos</h1><p>Consultá el catálogo completo y administrá disponibilidad y stock.</p></div><div className="admin-heading-actions"><span>{filtered.length} de {products.length}</span><Link className="primary link-button admin-create-button" aria-label="Nuevo producto" to="/admin/productos/nuevo">+ Nuevo producto</Link></div></div>
     <AdminFeedback error={loadError || mutationError} success={success} />
     <div className="admin-filters" aria-label="Filtros de productos">
       <label className="admin-search">Buscar por nombre<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Ej. monstera" /></label>
@@ -78,11 +82,11 @@ export function ProductsAdmin() {
         const isPending = pending === product.id
         const low = product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD
         return <article className="admin-product-row" key={product.id} aria-busy={isPending}>
-          <div><strong>{product.name}</strong><span>{product.category?.name || 'Sin categoría'}</span></div>
+          <div><strong>{product.name}</strong><span>{product.categories?.length ? product.categories.map(item => item.name).join(', ') : product.category?.name || 'Sin categoría'}</span></div>
           <div data-label="Precio"><strong>{money(product.price)}</strong></div>
           <div data-label="Stock"><strong>{product.stock}</strong>{low && <small className="low-stock"> Stock bajo</small>}{product.stock === 0 && <small className="no-stock"> Sin stock</small>}</div>
           <div data-label="Estado"><span className={product.isActive ? 'admin-pill active' : 'admin-pill inactive'}>{product.isActive ? 'Activo' : 'Inactivo'}</span></div>
-          <div className="admin-product-actions"><Link to={`/admin/productos/${product.id}/editar`}>Editar</Link><button type="button" disabled={pending !== null} onClick={() => changeStatus(product)}>{isPending ? 'Guardando…' : product.isActive ? 'Desactivar' : 'Activar'}</button></div>
+          <div className="admin-product-actions"><Link to={`/admin/productos/${product.id}/editar`}>Editar</Link><button type="button" disabled={pending !== null} onClick={() => changeStatus(product)}>{isPending ? 'Guardando…' : product.isActive ? 'Desactivar' : 'Activar'}</button><button className="danger-action" type="button" disabled={pending !== null} onClick={() => remove(product)}>Eliminar</button></div>
         </article>
       })}</div>}
     <p className="admin-footnote">La API entrega actualmente la lista completa; los filtros se aplican en esta pantalla y no se simula paginación.</p>

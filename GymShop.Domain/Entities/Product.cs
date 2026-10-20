@@ -13,12 +13,14 @@ public class Product
     public decimal? PackageWidthCm { get; set; }
     public decimal? PackageHeightCm { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsDeleted { get; set; }
     public int? CategoryId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public uint RowVersion { get; set; }
 
     public Category? Category { get; set; }
+    public ICollection<Category> Categories { get; set; } = new List<Category>();
 
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
