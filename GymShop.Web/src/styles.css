@@ -1005,8 +1005,8 @@ main { max-width:1320px; padding-top:28px; }
   .admin-app .attribute-option-list > div { padding:14px 12px; }
   .admin-app .attribute-option-list > div > .attribute-actions { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
   .admin-app .attribute-option-list > div > .attribute-actions button { width:100%; min-width:0; }
-  .admin-app .category-row > .status[data-label="Estado"] { width:auto; min-width:104px; max-width:max-content; justify-self:start; padding:7px 13px; }
-  .admin-app .category-row > .status[data-label="Estado"]::before { margin-bottom:2px; }
+  .admin-app .category-row > .status[data-label="Estado"] { width:112px; min-width:112px; max-width:112px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; justify-self:start; padding:7px 10px; text-align:center; }
+  .admin-app .category-row > .status[data-label="Estado"]::before { width:100%; margin-bottom:2px; text-align:center; }
   .admin-app .admin-order-list { display:grid; gap:14px; border:0; background:transparent; }
   .admin-app .admin-order-header { display:none; }
   .admin-app .admin-order-row:not(.admin-order-header) { position:relative; grid-template-columns:repeat(2,minmax(0,1fr)); padding:22px 20px 18px; border:1px solid #d8cdbf; border-radius:12px; box-shadow:0 12px 28px #4b352214; overflow:hidden; }
