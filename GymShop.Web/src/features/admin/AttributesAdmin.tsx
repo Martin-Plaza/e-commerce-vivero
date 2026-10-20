@@ -56,8 +56,7 @@ export function AttributesAdmin() {
         </header>
         <div className="attribute-option-list">{attribute.options.map(item =>
           <div key={item.id}>
-            <span className={attribute.presentation === 'ColorSwatch' ? 'attribute-color-preview' : ''} style={attribute.presentation === 'ColorSwatch' ? { background: item.visualValue || 'transparent' } : undefined}>{attribute.presentation === 'ColorSwatch' ? '' : item.value}</span>
-            <strong>{item.value}</strong><small>{item.usageCount || 0} usos</small>
+            <div className="attribute-option-copy">{attribute.presentation === 'ColorSwatch' && <span className="attribute-color-preview" style={{ background: item.visualValue || 'transparent' }} aria-hidden="true" />}<strong>{item.value}</strong></div><small className="attribute-option-usage">{item.usageCount || 0} usos</small>
             <span className="attribute-actions">
               <button className="secondary-action" onClick={() => {
                 const value = window.prompt('Valor de la opción', item.value)?.trim()
