@@ -28,7 +28,7 @@ async function fillValidCreateForm() {
   await userEvent.type(screen.getByLabelText('Descripción'), 'Descripción válida')
   await userEvent.type(screen.getByLabelText('Precio'), '12500.50')
   await userEvent.type(screen.getByLabelText('Stock'), '4')
-  await userEvent.selectOptions(screen.getByLabelText('Categoría'), '4')
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Fuerza' }))
   await userEvent.type(screen.getByLabelText('URL de imagen'), '/images/products/nuevo.webp')
   await userEvent.type(screen.getByLabelText('Peso empaquetado'), '1500')
   await userEvent.type(screen.getByLabelText('Largo empaquetado'), '30')
@@ -44,7 +44,7 @@ describe('alta y edición administrativa de productos', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(defaultApi)
     render(<App />)
     expect(await screen.findByRole('heading', { name: 'Nuevo producto' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Fuerza' })).toHaveValue('4')
+    expect(screen.getByRole('checkbox', { name: 'Fuerza' })).not.toBeChecked()
     expect(screen.getByRole('button', { name: 'Crear producto' })).toBeEnabled()
   })
 
@@ -65,19 +65,19 @@ describe('alta y edición administrativa de productos', () => {
     expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
     expect(screen.getByText('El precio debe ser mayor a cero.')).toBeInTheDocument()
     expect(screen.getByText('El stock debe ser un número entero mayor o igual a cero.')).toBeInTheDocument()
-    expect(screen.getByText('Seleccioná una categoría.')).toBeInTheDocument()
-    expect(screen.getByText('Agregá una imagen o su URL.')).toBeInTheDocument()
+    expect(screen.getByText('Seleccioná al menos una categoría.')).toBeInTheDocument()
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
-  it('no crea un producto sin archivo ni URL aunque el resto esté completo', async () => {
+  it('crea un producto sin imagen general cuando el resto está completo', async () => {
     signIn(); window.history.replaceState(null, '', '/admin/productos/nuevo')
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(defaultApi)
     render(<App />); await screen.findByRole('button', { name: 'Crear producto' }); await fillValidCreateForm()
     await userEvent.clear(screen.getByLabelText('URL de imagen'))
     await userEvent.click(screen.getByRole('button', { name: 'Crear producto' }))
-    expect(screen.getByText('Agregá una imagen o su URL.')).toBeInTheDocument()
-    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(true))
+    const create = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')
+    expect(JSON.parse(String(create?.[1]?.body)).imageUrl).toBeNull()
   })
 
   it.each([
@@ -136,7 +136,7 @@ describe('alta y edición administrativa de productos', () => {
     expect(screen.getByLabelText('Descripción')).toHaveValue('Hierro')
     expect(screen.getByLabelText('Precio')).toHaveValue(42000)
     expect(screen.getByLabelText('Stock')).toHaveValue(6)
-    expect(screen.getByLabelText('Categoría')).toHaveValue('4')
+    expect(screen.getByRole('checkbox', { name: 'Fuerza' })).toBeChecked()
     expect(screen.getByLabelText('Producto activo')).not.toBeChecked()
     await userEvent.clear(screen.getByLabelText('Nombre')); await userEvent.type(screen.getByLabelText('Nombre'), 'Kettlebell Pro')
     await userEvent.dblClick(screen.getByRole('button', { name: 'Guardar cambios' }))

@@ -239,9 +239,16 @@ public class GymShopDbContext : DbContext, IApplicationDbContext
             entity.Property(x => x.RowVersion).IsRowVersion();
             entity.HasIndex(x => x.CategoryId);
             entity.HasOne(x => x.Category)
-                .WithMany(x => x.Products)
+                .WithMany(x => x.PrimaryProducts)
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasMany(x => x.Categories)
+                .WithMany(x => x.Products)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProductCategory",
+                    right => right.HasOne<Category>().WithMany().HasForeignKey("CategoryId").OnDelete(DeleteBehavior.Cascade),
+                    left => left.HasOne<Product>().WithMany().HasForeignKey("ProductId").OnDelete(DeleteBehavior.Cascade),
+                    join => { join.ToTable("ProductCategories"); join.HasKey("ProductId", "CategoryId"); });
         });
 
         modelBuilder.Entity<ProductVariant>(entity =>
@@ -254,6 +261,7 @@ public class GymShopDbContext : DbContext, IApplicationDbContext
             });
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Sku).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.ImageUrl).HasMaxLength(500);
             entity.Property(x => x.Price).HasPrecision(18, 2);
             entity.Property(x => x.PackageLengthCm).HasPrecision(8, 2);
             entity.Property(x => x.PackageWidthCm).HasPrecision(8, 2);

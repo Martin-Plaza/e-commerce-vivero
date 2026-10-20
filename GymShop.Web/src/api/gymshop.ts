@@ -22,6 +22,7 @@ export const api = {
   createAttribute: (data: { name: string; presentation: string; displayOrder: number }) => request<ProductAttributeDefinition>('/api/attributes', json('POST', data)),
   updateAttribute: (id: number, data: { name: string; presentation: string; displayOrder: number }) => request<ProductAttributeDefinition>(`/api/attributes/${id}`, json('PUT', data)),
   setAttributeStatus: (id: number, isActive: boolean) => request<void>(`/api/attributes/${id}/status`, json('PATCH', { isActive })),
+  deleteAttribute: (id: number) => request<void>(`/api/attributes/${id}`, { method: 'DELETE' }),
   addAttributeOption: (id: number, data: { value: string; visualValue: string | null; displayOrder: number }) => request(`/api/attributes/${id}/options`, json('POST', data)),
   updateAttributeOption: (id: number, optionId: number, data: { value: string; visualValue: string | null; displayOrder: number }) => request(`/api/attributes/${id}/options/${optionId}`, json('PUT', data)),
   setAttributeOptionStatus: (id: number, optionId: number, isActive: boolean) => request<void>(`/api/attributes/${id}/options/${optionId}/status`, json('PATCH', { isActive })),
@@ -30,6 +31,7 @@ export const api = {
   createCategory: (data: CategoryInput) => request<AdminCategory>('/api/categories', json('POST', data)),
   updateCategory: (id: number, data: CategoryInput) => request<AdminCategory>(`/api/categories/${id}`, json('PUT', data)),
   setCategoryStatus: (id: number, isActive: boolean) => request<void>(`/api/categories/${id}/status`, json('PATCH', { isActive })),
+  deleteCategory: (id: number) => request<void>(`/api/categories/${id}`, { method: 'DELETE' }),
   product: (id: number) => request<Product>(`/api/products/${id}`),
   createProduct: (data: CreateProductInput) => request<Product>('/api/products', json('POST', data)),
   updateProduct: (id: number, data: UpdateProductInput) => request<Product>(`/api/products/${id}`, json('PUT', data)),
@@ -39,6 +41,7 @@ export const api = {
   },
   deleteProductImage: (data: { key?: string; url?: string }) => request<void>('/api/products/images', json('DELETE', data)),
   setProductStatus: (id: number, isActive: boolean) => request<void>(`/api/products/${id}/status`, json('PATCH', { isActive })),
+  deleteProduct: (id: number) => request<void>(`/api/products/${id}`, { method: 'DELETE' }),
   stockMovements: (filters: { productId?: number; page?: number; pageSize?: number; type?: string; fromUtc?: string; toUtc?: string } = {}) => {
     const query = new URLSearchParams(); Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== '') query.set(key, String(value)) })
     return request<StockMovementPage>(`/api/stock/movements?${query}`)

@@ -83,7 +83,7 @@ internal static class NurseryCatalogSeeder
             category.IsActive = false;
         }
 
-        var existingProducts = await db.Products.ToListAsync(cancellationToken);
+        var existingProducts = await db.Products.Include(product => product.Categories).ToListAsync(cancellationToken);
         foreach (var product in existingProducts.Where(product => !nurseryProductNames.Contains(product.Name)))
         {
             product.IsActive = false;
@@ -124,7 +124,10 @@ internal static class NurseryCatalogSeeder
             product.Price = seed.Price;
             product.Stock = seed.Stock;
             product.ImageUrl = seed.ImageUrl;
-            product.CategoryId = existingCategories.Single(category => category.Slug == seed.CategorySlug).Id;
+            var category = existingCategories.Single(category => category.Slug == seed.CategorySlug);
+            product.CategoryId = category.Id;
+            product.Categories.Clear();
+            product.Categories.Add(category);
             product.PackageWeightGrams = seed.WeightGrams;
             product.PackageLengthCm = seed.LengthCm;
             product.PackageWidthCm = seed.WidthCm;

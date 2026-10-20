@@ -8,33 +8,39 @@ export function AttributesAdmin() {
   const [items, setItems] = useState<ProductAttributeDefinition[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ name: '', presentation: 'Button', displayOrder: 0 })
   const [option, setOption] = useState<Record<number, { value: string; visualValue: string }>>({})
-  const load = async () => {
-    setLoading(true)
+  const load = async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     try { setItems(await api.adminAttributes()) }
     catch (value) { setError(describeAdminError(value)) }
-    finally { setLoading(false) }
+    finally { if (showLoading) setLoading(false) }
   }
   useEffect(() => { void load() }, [])
   const run = async (action: () => Promise<unknown>) => {
     setError('')
-    try { await action(); await load() }
+    try { await action(); await load(false) }
     catch (value) { setError(describeAdminError(value)) }
   }
 
   return <section className="admin-page">
-    <div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>Atributos</h1><p>Definí atributos reutilizables y sus opciones.</p></div></div>
+    <div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>Atributos</h1><p>Definí atributos reutilizables y sus opciones.</p></div><button className="primary admin-create-button" type="button" onClick={() => setCreating(true)}>+ Nuevo atributo</button></div>
     <AdminFeedback error={error} />
-    <form className="attribute-create" onSubmit={event => {
+    {creating && <form className="attribute-create" onSubmit={event => {
       event.preventDefault()
-      void run(async () => { await api.createAttribute(form); setForm({ name: '', presentation: 'Button', displayOrder: 0 }) })
+      void run(async () => {
+        const nextOrder = items.length === 0 ? 0 : Math.max(...items.map(item => item.displayOrder)) + 1
+        await api.createAttribute({ ...form, displayOrder: nextOrder })
+        setForm({ name: '', presentation: 'Button', displayOrder: 0 })
+        setCreating(false)
+      })
     }}>
       <label>Nombre<input required value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} /></label>
       <label>Presentación<select value={form.presentation} onChange={event => setForm({ ...form, presentation: event.target.value })}><option value="Button">Botones</option><option value="ColorSwatch">Muestras de color</option></select></label>
-      <label>Orden<input type="number" min="0" value={form.displayOrder} onChange={event => setForm({ ...form, displayOrder: Number(event.target.value) })} /></label>
       <button className="primary">Crear atributo</button>
-    </form>
+      <button type="button" onClick={() => setCreating(false)}>Cancelar</button>
+    </form>}
     {loading ? <AdminLoading label="Cargando atributos…" /> : <div className="attribute-admin-list">{items.map(attribute =>
       <article key={attribute.id} className="attribute-card">
         <header>
@@ -45,6 +51,7 @@ export function AttributesAdmin() {
               if (name) void run(() => api.updateAttribute(attribute.id, { name, presentation: attribute.presentation, displayOrder: attribute.displayOrder }))
             }}>Editar</button>
             <button className={attribute.isActive ? 'danger-action' : 'success-action'} onClick={() => void run(() => api.setAttributeStatus(attribute.id, !attribute.isActive))}>{attribute.isActive ? 'Desactivar' : 'Activar'}</button>
+            <button className="danger-action" onClick={() => { if (window.confirm(`¿Eliminar definitivamente “${attribute.name}”? Esta acción no se puede deshacer.`)) void run(() => api.deleteAttribute(attribute.id)) }}>Eliminar</button>
           </div>
         </header>
         <div className="attribute-option-list">{attribute.options.map(item =>

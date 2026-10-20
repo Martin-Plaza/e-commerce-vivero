@@ -8,7 +8,7 @@ export function ProductCard({ product, onAdd }: { product: Product; onAdd?(produ
   return <article className={`product-card commercial-card ${product.stock < 1 ? 'out-of-stock' : ''}`}>
     <Link className="product-image" to={`/catalogo/${product.id}`} aria-label={`Ver ${product.name}`}>
       <ProductImage src={product.imageUrl} alt={product.name} />
-      {product.category && <span className="category-badge">{product.category.name}</span>}
+      {(product.categories?.length ? product.categories : product.category ? [product.category] : []).map(category => <span className="category-badge" key={category.id}>{category.name}</span>)}
       {product.stock < 1 && <span className="stock-badge">Sin stock</span>}
     </Link>
     <div className="product-card-body">

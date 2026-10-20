@@ -1383,6 +1383,9 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -1546,6 +1549,10 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -2043,6 +2050,21 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
                     b.ToTable("WebhookReceipts", (string)null);
                 });
 
+            modelBuilder.Entity("ProductCategory", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProductId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("ProductCategories", (string)null);
+                });
+
             modelBuilder.Entity("GymShop.Domain.Entities.AuditEntry", b =>
                 {
                     b.HasOne("GymShop.Domain.Entities.User", "ActorUser")
@@ -2342,7 +2364,7 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
             modelBuilder.Entity("GymShop.Domain.Entities.Product", b =>
                 {
                     b.HasOne("GymShop.Domain.Entities.Category", "Category")
-                        .WithMany("Products")
+                        .WithMany("PrimaryProducts")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -2487,6 +2509,21 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ProductCategory", b =>
+                {
+                    b.HasOne("GymShop.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GymShop.Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GymShop.Domain.Entities.BillingDocument", b =>
                 {
                     b.Navigation("Items");
@@ -2501,7 +2538,7 @@ namespace GymShop.Infrastructure.Data.PostgresMigrations
 
             modelBuilder.Entity("GymShop.Domain.Entities.Category", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("PrimaryProducts");
                 });
 
             modelBuilder.Entity("GymShop.Domain.Entities.CheckoutSession", b =>

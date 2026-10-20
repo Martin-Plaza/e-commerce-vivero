@@ -288,8 +288,14 @@ public sealed class ConfirmPasswordResetUseCase : IConfirmPasswordResetUseCase
         await using var transaction = userId is not null && _transactionManager is not null
             ? await _transactionManager.BeginPasswordResetActivationTransactionAsync(userId.Value, cancellationToken)
             : null;
-        var user = await _db.Users.Include(x => x.PasswordResetCodes).SingleOrDefaultAsync(x => x.Email == email && x.IsActive, cancellationToken);
-        var reset = user?.PasswordResetCodes.Where(x => x.ConsumedAtUtc == null).OrderByDescending(x => x.CreatedAtUtc).FirstOrDefault();
+        var user = await _db.Users.SingleOrDefaultAsync(x => x.Email == email && x.IsActive, cancellationToken);
+        var reset = user is null
+            ? null
+            : await _db.PasswordResetCodes
+                .Where(x => x.UserId == user.Id && x.ConsumedAtUtc == null)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .ThenByDescending(x => x.Id)
+                .FirstOrDefaultAsync(cancellationToken);
         if (reset is null || reset.ExpiresAtUtc <= now || reset.FailedAttempts >= PasswordReset.MaximumAttempts)
             return AppResult<PasswordResetCompletedResponse>.Failure(AppErrorType.Validation, PasswordReset.GenericInvalidCodeMessage);
 
@@ -301,7 +307,10 @@ public sealed class ConfirmPasswordResetUseCase : IConfirmPasswordResetUseCase
             return AppResult<PasswordResetCompletedResponse>.Failure(AppErrorType.Validation, PasswordReset.GenericInvalidCodeMessage);
         }
 
-        foreach (var item in user!.PasswordResetCodes.Where(x => x.ConsumedAtUtc == null)) item.ConsumedAtUtc = now;
+        var activeCodes = await _db.PasswordResetCodes
+            .Where(x => x.UserId == user!.Id && x.ConsumedAtUtc == null)
+            .ToListAsync(cancellationToken);
+        foreach (var item in activeCodes) item.ConsumedAtUtc = now;
         user.PasswordHash = _hasher.Hash(request.NewPassword);
         user.TokenVersion++;
         user.UpdatedAt = now;

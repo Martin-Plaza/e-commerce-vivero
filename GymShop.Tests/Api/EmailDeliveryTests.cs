@@ -4,12 +4,27 @@ using GymShop.Application.Abstractions;
 using GymShop.Infrastructure.Configuration;
 using GymShop.Infrastructure.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace GymShop.Tests.Api;
 
 public sealed class EmailDeliveryTests
 {
+    [Fact]
+    public async Task Mock_password_reset_only_exposes_a_code_for_an_existing_account()
+    {
+        var sender = new MockPasswordResetEmailSender(
+            NullLogger<MockPasswordResetEmailSender>.Instance,
+            Options.Create(new EmailOptions { ExposeDevelopmentCodes = true }));
+
+        var existing = await sender.SendAsync(Recipient, Code, deliver: true);
+        var unknown = await sender.SendAsync("unknown@example.com", "654321", deliver: false);
+
+        Assert.Equal(Code, existing.DevelopmentCode);
+        Assert.Null(unknown.DevelopmentCode);
+    }
+
     [Fact]
     public void Development_codes_cannot_be_exposed_outside_development()
     {

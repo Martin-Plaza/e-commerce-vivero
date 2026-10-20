@@ -166,7 +166,7 @@ describe('flujos y permisos de la aplicación', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
       const url = String(input); const body = init?.body ? JSON.parse(String(init.body)) as Record<string, string> : {}
       requests.push({ url, body })
-      if (url.includes('/forgot-password')) return json({ message: 'Si el email corresponde a una cuenta, enviamos un codigo para restablecer la password.', expiresInSeconds: 600, developmentCode: '654321' })
+      if (url.includes('/forgot-password')) return json({ message: 'Si el email corresponde a una cuenta, enviamos un codigo para restablecer la password.', expiresInSeconds: 600, developmentCode: '054321' })
       if (url.includes('/reset-password')) return json({ message: 'La password fue actualizada. Ya podes iniciar sesion.' })
       return json([])
     })
@@ -175,15 +175,15 @@ describe('flujos y permisos de la aplicación', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Olvidé mi contraseña' }))
     await userEvent.type(screen.getByLabelText('Email'), 'USER@GYM.COM')
     await userEvent.click(screen.getByRole('button', { name: 'Enviar código' }))
-    expect(await screen.findByText(/Código Mock local/)).toHaveTextContent('654321')
+    expect(await screen.findByText(/Código Mock local/)).toHaveTextContent('054321')
     expect(screen.getByText(/vence en 10 minutos/)).toBeInTheDocument()
     const resetCode = screen.getByLabelText('Código de recuperación')
-    await userEvent.type(resetCode, '654321')
+    expect(resetCode).toHaveValue('054321')
     const password = screen.getByLabelText('Nueva contraseña')
     await userEvent.type(password, 'NuevaClave456')
     await userEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
     expect(password).toHaveAttribute('type', 'text')
-    expect(resetCode).toHaveValue('654321')
+    expect(resetCode).toHaveValue('054321')
     expect(resetCode).toBeValid()
     expect(password).toBeValid()
     expect(password).toHaveValue('NuevaClave456')
@@ -192,7 +192,7 @@ describe('flujos y permisos de la aplicación', () => {
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument()
     expect(localStorage.getItem('gymshop.token')).toBeNull()
     expect(requests.find(request => request.url.includes('/forgot-password'))?.body.email).toBe('user@gym.com')
-    expect(requests.find(request => request.url.includes('/reset-password'))?.body).toEqual({ email: 'user@gym.com', code: '654321', newPassword: 'NuevaClave456' })
+    expect(requests.find(request => request.url.includes('/reset-password'))?.body).toEqual({ email: 'user@gym.com', code: '054321', newPassword: 'NuevaClave456' })
   })
 
   it('completa la solicitud desplegada sin mostrar un código', async () => {

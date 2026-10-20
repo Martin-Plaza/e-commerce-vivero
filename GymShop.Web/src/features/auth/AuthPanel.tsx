@@ -171,7 +171,7 @@ export function AuthPanel({ onDone }: AuthPanelProps) {
         {notice && <div className="notice" role="status">{notice}</div>}
         {error && <div className="error" role="alert">{error}</div>}
         <label>Código de verificación
-          <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoFocus disabled={busy || seconds === 0} />
+          <input key={`email-verification-code-${developmentCode ?? 'remote'}`} name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoFocus disabled={busy || seconds === 0} defaultValue={developmentCode ?? ''} />
         </label>
         <button className="primary" type="submit" disabled={busy || seconds === 0}>{busy ? 'Verificando…' : 'Verificar e ingresar'}</button>
         <button type="button" disabled={busy || seconds > 0} onClick={() => void execute(async () => {
@@ -199,7 +199,7 @@ export function AuthPanel({ onDone }: AuthPanelProps) {
         setResetEmail(null); setForgot(false); setDevelopmentCode(null); setResetSeconds(0); setNotice(result.message)
       }) }}>
         {notice && <div className="notice" role="status">{notice}</div>}{error && <div className="error" role="alert">{error}</div>}
-        <fieldset disabled={busy}><label>Código de recuperación<input key="password-reset-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoFocus /></label><label>Nueva contraseña<div className="password-field"><input name="newPassword" type={showPassword ? 'text' : 'password'} required minLength={8} maxLength={128} autoComplete="new-password" /><button className="password-visibility" type="button" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}><PasswordVisibilityIcon visible={showPassword} /></button></div></label></fieldset>
+        <fieldset disabled={busy}><label>Código de recuperación<input key={`password-reset-code-${developmentCode ?? 'remote'}`} name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoFocus defaultValue={developmentCode ?? ''} /></label><label>Nueva contraseña<div className="password-field"><input name="newPassword" type={showPassword ? 'text' : 'password'} required minLength={8} maxLength={128} autoComplete="new-password" /><button className="password-visibility" type="button" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}><PasswordVisibilityIcon visible={showPassword} /></button></div></label></fieldset>
         <button className="primary" type="submit" disabled={busy}>{busy ? 'Actualizando…' : 'Cambiar contraseña'}</button>
         <button type="button" className="link" disabled={busy} onClick={() => { setResetEmail(null); setForgot(true); setDevelopmentCode(null); setError(''); setNotice('') }}>Solicitar otro código</button>
         <button type="button" className="link" disabled={busy} onClick={() => { setResetEmail(null); setForgot(false); setDevelopmentCode(null); setError(''); setNotice('') }}>Volver al login</button>

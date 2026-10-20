@@ -35,7 +35,7 @@ services:
       Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-Raiz Viva}
       Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
       Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
-      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}
+      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-true}
       BankTransfer__BankName: ${GYMSHOP_BANK_NAME:-}
       BankTransfer__AccountHolder: ${GYMSHOP_BANK_ACCOUNT_HOLDER:-}
       BankTransfer__Cbu: ${GYMSHOP_BANK_CBU:-}
@@ -73,7 +73,7 @@ services:
       Email__FromName: ${GYMSHOP_EMAIL_FROM_NAME:-Raiz Viva}
       Email__PublicAppUrl: ${GYMSHOP_EMAIL_PUBLIC_APP_URL:-}
       Email__TransactionalNotificationsEnabled: ${GYMSHOP_EMAIL_TRANSACTIONAL_NOTIFICATIONS_ENABLED:-true}
-      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-false}
+      Email__ExposeDevelopmentCodes: ${GYMSHOP_EXPOSE_DEVELOPMENT_CODES:-true}
       BankTransfer__BankName: ${GYMSHOP_BANK_NAME:-}
       BankTransfer__AccountHolder: ${GYMSHOP_BANK_ACCOUNT_HOLDER:-}
       BankTransfer__Cbu: ${GYMSHOP_BANK_CBU:-}

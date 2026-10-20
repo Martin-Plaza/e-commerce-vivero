@@ -12,6 +12,7 @@ public interface IAttributeAdminService
     Task<AppResult<AttributeResponse>> CreateAsync(UpsertAttributeRequest request, CancellationToken ct);
     Task<AppResult<AttributeResponse>> UpdateAsync(int id, UpsertAttributeRequest request, CancellationToken ct);
     Task<AppResult> SetStatusAsync(int id, bool active, CancellationToken ct);
+    Task<AppResult> DeleteAsync(int id, CancellationToken ct);
     Task<AppResult<AttributeOptionResponse>> AddOptionAsync(int id, UpsertAttributeOptionRequest request, CancellationToken ct);
     Task<AppResult<AttributeOptionResponse>> UpdateOptionAsync(int id, int optionId, UpsertAttributeOptionRequest request, CancellationToken ct);
     Task<AppResult> SetOptionStatusAsync(int id, int optionId, bool active, CancellationToken ct);
@@ -47,6 +48,21 @@ public class AttributeAdminService(IApplicationDbContext db) : IAttributeAdminSe
         if (entity is null) return AppResult.Failure(AppErrorType.NotFound, "Atributo no encontrado.");
         if (!active && entity.Options.Any(x => x.VariantAttributes.Any(v => v.ProductVariant.IsActive))) return AppResult.Failure(AppErrorType.Conflict, "No se puede desactivar un atributo usado por variantes activas.");
         entity.IsActive = active; await db.SaveChangesAsync(ct); return AppResult.Success();
+    }
+    public async Task<AppResult> DeleteAsync(int id, CancellationToken ct)
+    {
+        var entity = await db.ProductAttributes.Include(x => x.Options).ThenInclude(x => x.VariantAttributes)
+            .Include(x => x.Options).ThenInclude(x => x.ColorImages).SingleOrDefaultAsync(x => x.Id == id, ct);
+        if (entity is null) return AppResult.Failure(AppErrorType.NotFound, "Atributo no encontrado.");
+        foreach (var option in entity.Options)
+        {
+            foreach (var variantAttribute in option.VariantAttributes) variantAttribute.ProductAttributeOptionId = null;
+            foreach (var colorImage in option.ColorImages) colorImage.ProductAttributeOptionId = null;
+        }
+        db.ProductAttributeOptions.RemoveRange(entity.Options);
+        db.ProductAttributes.Remove(entity);
+        await db.SaveChangesAsync(ct);
+        return AppResult.Success();
     }
     public async Task<AppResult<AttributeOptionResponse>> AddOptionAsync(int id, UpsertAttributeOptionRequest r, CancellationToken ct)
     {

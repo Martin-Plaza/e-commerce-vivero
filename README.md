@@ -177,7 +177,18 @@ Email__PublicAppUrl=https://tienda.ejemplo.com
 Email__TransactionalNotificationsEnabled=true
 ```
 
-En desarrollo puede utilizarse el proveedor `Mock`.
+En desarrollo se utiliza el proveedor `Mock` y se muestran en la interfaz los
+códigos locales de verificación y recuperación. Esto permite crear una cuenta
+cliente o restablecer su contraseña sin enviar un email real. La exposición de
+estos códigos está validada para funcionar únicamente en el entorno
+`Development`.
+
+Si usás Docker Compose, mantené estas variables en `.env.docker`:
+
+```env
+GYMSHOP_EMAIL_PROVIDER=Mock
+GYMSHOP_EXPOSE_DEVELOPMENT_CODES=true
+```
 
 ## Redes sociales y SEO
 

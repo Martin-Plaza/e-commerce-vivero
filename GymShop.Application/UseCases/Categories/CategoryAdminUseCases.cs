@@ -13,6 +13,7 @@ public interface IGetAdminCategoryByIdUseCase { Task<AppResult<AdminCategoryResp
 public interface ICreateCategoryUseCase { Task<AppResult<AdminCategoryResponse>> ExecuteAsync(UpsertCategoryRequest request, CancellationToken cancellationToken = default); }
 public interface IUpdateCategoryUseCase { Task<AppResult<AdminCategoryResponse>> ExecuteAsync(int id, UpsertCategoryRequest request, CancellationToken cancellationToken = default); }
 public interface IUpdateCategoryStatusUseCase { Task<AppResult> ExecuteAsync(int id, UpdateCategoryStatusRequest request, CancellationToken cancellationToken = default); }
+public interface IDeleteCategoryUseCase { Task<AppResult> ExecuteAsync(int id, CancellationToken cancellationToken = default); }
 
 internal static class CategoryRules
 {
@@ -51,7 +52,7 @@ public class GetAdminCategoriesUseCase(IApplicationDbContext db) : IGetAdminCate
 {
     public Task<List<AdminCategoryResponse>> ExecuteAsync(CancellationToken cancellationToken = default) => db.Categories.AsNoTracking()
         .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name)
-        .Select(x => new AdminCategoryResponse(x.Id, x.Name, x.Slug, x.Description, x.DisplayOrder, x.IsActive, x.Products.Count, x.Color))
+        .Select(x => new AdminCategoryResponse(x.Id, x.Name, x.Slug, x.Description, x.DisplayOrder, x.IsActive, x.Products.Count(product => !product.IsDeleted), x.Color))
         .ToListAsync(cancellationToken);
 }
 
@@ -60,7 +61,7 @@ public class GetAdminCategoryByIdUseCase(IApplicationDbContext db) : IGetAdminCa
     public async Task<AppResult<AdminCategoryResponse>> ExecuteAsync(int id, CancellationToken cancellationToken = default)
     {
         var category = await db.Categories.AsNoTracking().Where(x => x.Id == id)
-            .Select(x => new AdminCategoryResponse(x.Id, x.Name, x.Slug, x.Description, x.DisplayOrder, x.IsActive, x.Products.Count, x.Color))
+            .Select(x => new AdminCategoryResponse(x.Id, x.Name, x.Slug, x.Description, x.DisplayOrder, x.IsActive, x.Products.Count(product => !product.IsDeleted), x.Color))
             .SingleOrDefaultAsync(cancellationToken);
         return category is null ? AppResult<AdminCategoryResponse>.Failure(AppErrorType.NotFound, "Categoría no encontrada.") : AppResult<AdminCategoryResponse>.Success(category);
     }
@@ -101,7 +102,7 @@ public class UpdateCategoryUseCase(IApplicationDbContext db, IAuditContext? audi
         category.Name = name; category.Slug = slug; category.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(); category.Color = request.Color; category.DisplayOrder = request.DisplayOrder;
         AuditTrail.Add(db, auditContext, "CategoryUpdated", "Category", category.Id, oldValue, new { category.Name, category.Slug, category.Description, category.Color, category.DisplayOrder });
         await db.SaveChangesAsync(cancellationToken);
-        return AppResult<AdminCategoryResponse>.Success(CategoryRules.Map(category, category.Products.Count));
+        return AppResult<AdminCategoryResponse>.Success(CategoryRules.Map(category, category.Products.Count(product => !product.IsDeleted)));
     }
 }
 
@@ -114,6 +115,24 @@ public class UpdateCategoryStatusUseCase(IApplicationDbContext db, IAuditContext
         if (category.IsActive == request.IsActive) return AppResult.Success();
         var previous = category.IsActive; category.IsActive = request.IsActive;
         AuditTrail.Add(db, auditContext, "CategoryStatusChanged", "Category", category.Id, new { IsActive = previous }, new { category.IsActive });
+        await db.SaveChangesAsync(cancellationToken);
+        return AppResult.Success();
+    }
+}
+
+public class DeleteCategoryUseCase(IApplicationDbContext db, IAuditContext? auditContext = null) : IDeleteCategoryUseCase
+{
+    public async Task<AppResult> ExecuteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var category = await db.Categories.Include(x => x.Products).Include(x => x.PrimaryProducts).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (category is null) return AppResult.Failure(AppErrorType.NotFound, "Categoría no encontrada.");
+
+        foreach (var product in category.Products.ToList()) product.Categories.Remove(category);
+        foreach (var product in category.PrimaryProducts.ToList())
+            product.Category = product.Categories.FirstOrDefault(x => x.Id != id);
+
+        AuditTrail.Add(db, auditContext, "CategoryDeleted", "Category", category.Id, new { category.Name, category.Slug, category.IsActive }, null);
+        db.Categories.Remove(category);
         await db.SaveChangesAsync(cancellationToken);
         return AppResult.Success();
     }

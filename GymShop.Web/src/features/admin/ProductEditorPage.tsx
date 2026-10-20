@@ -52,17 +52,17 @@ export function ProductEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     const requests = mode === 'edit' ? Promise.all([api.categories(), api.product(numericId), api.adminAttributes()]) : Promise.all([api.categories(), Promise.resolve(null), api.adminAttributes()])
     requests.then(async ([categoryList, loadedProduct, attributeList]) => {
       let options: Category[] = categoryList
-      if (mode === 'edit' && loadedProduct?.category && !categoryList.some(item => item.id === loadedProduct.category?.id)) {
-        const all = await api.adminCategories(); options = all.filter(item => item.isActive || item.id === loadedProduct.category?.id)
+      const selectedCategoryIds = new Set((loadedProduct?.categories?.length ? loadedProduct.categories : loadedProduct?.category ? [loadedProduct.category] : []).map(item => item.id))
+      if (mode === 'edit' && [...selectedCategoryIds].some(id => !categoryList.some(item => item.id === id))) {
+        const all = await api.adminCategories(); options = all.filter(item => item.isActive || selectedCategoryIds.has(item.id))
       }
       if (active) { setCategories(options); setProduct(normalizeLegacyVariants(loadedProduct, attributeList)); setAttributes(attributeList) }
     }).catch(error => { if (active) { if (mode === 'edit' && error instanceof ApiError && error.status === 404) setNotFound(true); else setLoadError(describeAdminError(error)) } }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [mode, numericId, hasValidProductId, retryKey])
 
-  const save = async (values: ProductFormValues, imageFile: File | null, colorImageFiles: Record<string, File>) => {
+  const save = async (values: ProductFormValues, imageFile: File | null, colorImageFiles: Record<string, File>, variantImageFiles: Record<number, File>) => {
     if (submitting.current) return
-    if (!imageFile && !values.imageUrl.trim()) { setFieldErrors({ imageUrl: 'Agregá una imagen o su URL.' }); return }
     submitting.current = true; setBusy(true); setSubmitError(''); setFieldErrors({})
     let completed = false; const uploadedKeys: string[] = []
     try {
@@ -80,6 +80,18 @@ export function ProductEditorPage({ mode }: { mode: 'create' | 'edit' }) {
           uploadedKeys.push(uploaded.key); colorImages[color] = uploaded.url
         }
         nextValues = { ...nextValues, colorImages }; setBusyLabel('Guardando…')
+      }
+      if (Object.keys(variantImageFiles).length) {
+        setBusyLabel('Subiendo imágenes de variantes…')
+        const variants = [...nextValues.variants]
+        for (const [rawIndex, file] of Object.entries(variantImageFiles)) {
+          const index = Number(rawIndex)
+          if (!variants[index]) continue
+          const uploaded = await api.uploadProductImage(file, mode === 'edit' ? numericId : undefined)
+          uploadedKeys.push(uploaded.key)
+          variants[index] = { ...variants[index], imageUrl: uploaded.url }
+        }
+        nextValues = { ...nextValues, variants }; setBusyLabel('Guardando…')
       }
       const saved = mode === 'create' ? await api.createProduct(toProductInput(nextValues)) : await api.updateProduct(numericId, toUpdateProductInput(nextValues))
       completed = true
@@ -105,6 +117,6 @@ export function ProductEditorPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return <section className="admin-page"><div className="admin-page-heading"><div><p className="eyebrow">CATÁLOGO</p><h1>{mode === 'create' ? 'Nuevo producto' : 'Editar producto'}</h1><p>{mode === 'create' ? 'Completá los datos del producto.' : 'Actualizá los datos principales del producto.'}</p></div><Link to="/admin/productos">← Volver al listado</Link></div>
     <AdminFeedback error={loadError || submitError} />
-    {loading ? <AdminLoading label={mode === 'create' ? 'Cargando catálogo…' : 'Cargando producto…'} /> : notFound ? <AdminEmpty>Producto no encontrado.</AdminEmpty> : loadError ? <AdminEmpty>No se pudo preparar el formulario. <button type="button" onClick={() => setRetryKey(value => value + 1)}>Reintentar</button></AdminEmpty> : categories.length === 0 ? <AdminEmpty>No hay categorías disponibles. No es posible guardar productos hasta que exista una categoría activa.</AdminEmpty> : mode === 'edit' && !product ? <AdminEmpty>Producto no encontrado.</AdminEmpty> : <ProductForm mode={mode} values={product ? productToFormValues(product) : emptyProductValues()} categories={categories} attributes={attributes} busy={busy} busyLabel={busyLabel} serverErrors={fieldErrors} onSubmit={(values, imageFile, colorImageFiles) => void save(values, imageFile, colorImageFiles)} />}
+    {loading ? <AdminLoading label={mode === 'create' ? 'Cargando catálogo…' : 'Cargando producto…'} /> : notFound ? <AdminEmpty>Producto no encontrado.</AdminEmpty> : loadError ? <AdminEmpty>No se pudo preparar el formulario. <button type="button" onClick={() => setRetryKey(value => value + 1)}>Reintentar</button></AdminEmpty> : categories.length === 0 ? <AdminEmpty>No hay categorías disponibles. No es posible guardar productos hasta que exista una categoría activa.</AdminEmpty> : mode === 'edit' && !product ? <AdminEmpty>Producto no encontrado.</AdminEmpty> : <ProductForm mode={mode} values={product ? productToFormValues(product) : emptyProductValues()} categories={categories} attributes={attributes} busy={busy} busyLabel={busyLabel} serverErrors={fieldErrors} onSubmit={(values, imageFile, colorImageFiles, variantImageFiles) => void save(values, imageFile, colorImageFiles, variantImageFiles)} />}
   </section>
 }
