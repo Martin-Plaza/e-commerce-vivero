@@ -6,7 +6,7 @@ import { storefront } from '../../config/storefront'
 
 const hasSupportedImage = (product: Product) => Boolean(product.imageUrl && (product.imageUrl.startsWith('/') || /^https?:\/\//i.test(product.imageUrl)))
 
-export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): void; onProduct(id: number): void }) {
+export function Home({ onCatalog }: { onCatalog(category?: string): void; onProduct(id: number): void }) {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -21,7 +21,6 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
     }).catch(() => setLoadError(true)).finally(() => setLoading(false))
   }, [])
 
-  const campaignProduct = products.find(product => product.name.toLocaleLowerCase('es').includes('monstera')) ?? products[0]
   return <>
     <section className="home-hero">
       <img src={storefront.assets.hero} alt={storefront.copy.heroImageAlt} width="1600" height="640" />
@@ -31,7 +30,6 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
         <p>{storefront.copy.heroDescription}</p>
         <button className="primary hero-cta" onClick={() => onCatalog()}>{storefront.copy.heroAction}</button>
       </div>
-      <button className="hero-product-link" onClick={() => onCatalog()}>{storefront.copy.heroSecondaryAction} <span>→</span></button>
     </section>
 
     <section className="category-section" aria-labelledby="category-title">
@@ -50,16 +48,16 @@ export function Home({ onCatalog, onProduct }: { onCatalog(category?: string): v
       {loading ? <div className="skeleton-grid" aria-label={storefront.copy.featuredLoading}>{[1, 2, 3].map(item => <div className="product-skeleton" key={item} />)}</div> : loadError ? <div className="empty"><p>{storefront.copy.featuredLoadError}</p><button onClick={() => window.location.reload()}>Reintentar</button></div> : products.length === 0 ? <div className="empty">{storefront.copy.featuredEmpty}</div> : <div className="product-grid">{products.map(product => <ProductCard product={product} key={product.id} />)}</div>}
     </section>
 
-    {campaignProduct && <section className="editorial-section" aria-label={storefront.copy.campaignAriaLabel}>
-      <button className="editorial-banner" onClick={() => onProduct(campaignProduct.id)}>
+    <section className="editorial-section" aria-label={storefront.copy.campaignAriaLabel}>
+      <button className="editorial-banner" onClick={() => onCatalog()}>
         <img src={storefront.assets.campaign} alt={storefront.copy.campaignImageAlt} width="1600" height="759" loading="lazy" />
         <span className="editorial-copy">
           <span className="eyebrow">{storefront.copy.campaignEyebrow}</span>
           <strong>{storefront.copy.campaignTitleLine1}<br />{storefront.copy.campaignTitleLine2}</strong>
-          <span>{storefront.copy.campaignPrefix} {campaignProduct.name} <b>→</b></span>
+          <span>Explorá plantas y cuidados <b>→</b></span>
         </span>
       </button>
-    </section>}
+    </section>
 
     <section className="trust-section" aria-label={`Beneficios de comprar en ${storefront.identity.name}`}>
       {storefront.copy.benefits.map(benefit => <article key={benefit.title}><span>{benefit.icon}</span><div><h3>{benefit.title}</h3><p>{benefit.description}</p></div></article>)}
