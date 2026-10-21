@@ -31,9 +31,9 @@ internal static class NurseryCatalogSeeder
 
     private static readonly ProductSeed[] FeaturedProducts =
     [
-        new("Monstera deliciosa", "Una planta tropical protagonista, de hojas amplias y caladas. Ideal para interiores luminosos sin sol directo.", 39900m, 14, "/images/products/monstera-deliciosa.webp", "plantas-interior", 5200, 34, 34, 85),
-        new("Potus limón", "Enredadera resistente y de crecimiento rápido, perfecta para estantes altos o macetas colgantes.", 24500m, 21, "/images/products/regadera-savia.webp", "plantas-interior", 1800, 22, 22, 42),
-        new("Lavanda francesa", "Aromática de floración violeta y perfume intenso. Disfruta del sol y los espacios bien ventilados.", 18900m, 18, "/images/products/lavanda.webp", "plantas-exterior", 2300, 24, 24, 46),
+        new("Monstera deliciosa", "Una planta tropical protagonista, de hojas amplias y caladas. Ideal para interiores luminosos sin sol directo.", 39900m, 3, "/images/products/monstera-deliciosa.webp", "plantas-interior", 5200, 34, 34, 85),
+        new("Potus limón", "Enredadera resistente y de crecimiento rápido, perfecta para estantes altos o macetas colgantes.", 24500m, 0, "/images/products/regadera-savia.webp", "plantas-interior", 1800, 22, 22, 42),
+        new("Lavanda francesa", "Aromática de floración violeta y perfume intenso. Disfruta del sol y los espacios bien ventilados.", 18900m, 5, "/images/products/lavanda.webp", "plantas-exterior", 2300, 24, 24, 46),
         new("Romero compacto", "Aromática perenne para cocinar y perfumar. Requiere buen sol y riego moderado.", 12800m, 26, "/images/products/romero.webp", "aromaticas-huerta", 1900, 22, 22, 38),
         new("Trío de suculentas", "Selección de tres variedades de bajo mantenimiento en macetas de cerámica color arena.", 22500m, 17, "/images/products/suculentas.webp", "cactus-suculentas", 2100, 36, 18, 20),
         new("Sustrato orgánico premium 20 L", "Mezcla aireada con compost, perlita y fibra vegetal para plantas de interior y exterior.", 15900m, 35, "/images/products/sustrato-organico.webp", "sustratos-cuidado", 8500, 48, 32, 14),
@@ -41,31 +41,7 @@ internal static class NurseryCatalogSeeder
         new("Maceta terracota clásica 24 cm", "Maceta de barro poroso con plato incluido. Favorece la respiración de las raíces.", 16500m, 24, "/images/products/lavanda.webp", "macetas-accesorios", 3100, 28, 28, 27),
     ];
 
-    private static readonly ProductSeed[] Products = BuildProducts();
-
-    private static ProductSeed[] BuildProducts()
-    {
-        const int targetCount = 200;
-        var generated = Enumerable.Range(1, targetCount - FeaturedProducts.Length).Select(index =>
-        {
-            var category = Categories[(index - 1) % Categories.Length];
-            var image = FeaturedProducts[(index - 1) % FeaturedProducts.Length].ImageUrl;
-            var number = index.ToString("D3");
-            return new ProductSeed(
-                $"Producto de prueba {number}",
-                $"Producto de catálogo generado para pruebas de búsqueda, filtros, paginación y stock. Referencia {number}.",
-                8500m + (index % 40) * 1250m,
-                5 + index % 46,
-                image,
-                category.Slug,
-                500 + index % 20 * 250,
-                12 + index % 24,
-                10 + index % 18,
-                8 + index % 30);
-        });
-
-        return FeaturedProducts.Concat(generated).ToArray();
-    }
+    private static readonly ProductSeed[] Products = FeaturedProducts;
 
     public static async Task SeedAsync(
         GymShopDbContext db,

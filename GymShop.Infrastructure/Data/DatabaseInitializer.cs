@@ -24,6 +24,7 @@ public static class DatabaseInitializer
 
         await db.Database.MigrateAsync(cancellationToken);
         await NurseryCatalogSeeder.SeedAsync(db, configuration, cancellationToken);
+        await DemoAnalyticsSeeder.SeedAsync(db, configuration, cancellationToken);
         await SeedSuperAdminAsync(db, configuration, passwordHasher, cancellationToken);
     }
 

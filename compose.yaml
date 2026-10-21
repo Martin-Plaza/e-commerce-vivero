@@ -26,6 +26,7 @@ services:
       DATABASE_MIGRATION_URL: Host=database;Port=5432;Database=GymShopDb;Username=gymshop_migrator;Password=${GYMSHOP_MIGRATION_DB_PASSWORD}
       DatabaseInitialization__Enabled: "true"
       DemoCatalog__Enabled: "true"
+      DemoAnalytics__Enabled: "true"
       Jwt__Secret: ${GYMSHOP_JWT_SECRET}
       Mfa__EncryptionKey: ${GYMSHOP_MFA_ENCRYPTION_KEY}
       GoogleAuth__ClientId: ${GYMSHOP_GOOGLE_CLIENT_ID:-}
