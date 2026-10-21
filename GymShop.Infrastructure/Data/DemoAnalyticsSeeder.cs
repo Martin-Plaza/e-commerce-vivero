@@ -52,7 +52,7 @@ internal static class DemoAnalyticsSeeder
             .ToListAsync(cancellationToken);
         if (products.Count < 8) return;
 
-        var customerRole = await db.Roles.SingleAsync(role => role.Name == "Customer", cancellationToken);
+        var customerRole = await db.Roles.SingleAsync(role => role.Name == "User", cancellationToken);
         var customer = await db.Users.SingleOrDefaultAsync(user => user.Email == "cliente.demo@raizviva.demo", cancellationToken);
         if (customer is null)
         {
